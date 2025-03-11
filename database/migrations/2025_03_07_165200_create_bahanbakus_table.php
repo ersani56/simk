@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('bahanbakus', function (Blueprint $table) {
             $table->id();
-            $table->string('nama')->unique();
+            $table->string('kode_bbaku')->unique();
+            $table->string('nama_bbaku')->unique();
             $table->enum('satuan',['Kg','Mtr','Yrd','Pcs']);
             $table->integer('harga')->nullable();
-            $table->integer('stok')-> nullable();
-            $table->string('tempat')-> nullable();
             $table->timestamps();
         });
     }

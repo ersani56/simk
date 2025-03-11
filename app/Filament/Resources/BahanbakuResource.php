@@ -41,7 +41,11 @@ class BahanbakuResource extends Resource
             ->schema([
                 Card::make()
                     ->schema([
-                        TextInput::make('nama')
+                        TextInput::make('kode_bbaku')
+                        ->label('Kode bahan baku')
+                        ->required()
+                        ->unique(ignorable:fn($record)=>$record),
+                        TextInput::make('nama_bbaku')
                         ->label('Nama bahan baku')
                         ->Placeholder('Masukkan nama bahan baku, misal PE hitam')
                         ->required()
@@ -56,14 +60,6 @@ class BahanbakuResource extends Resource
                         ->required()
                         ->numeric()
                         ->prefix('Rp'),
-                        Select::make('tempat')->options([
-                            'Sri Agung'=>'Sri Agung',
-                            'Sohari'=>'Sohari',
-                            'Rumah'=>'Rumah',
-                            'Ruko'=>'Ruko',
-                            'Bude Imah'=>'Bude Imah',
-                            'Mb Hani'=>'Mb Hani',
-                        ]),
                     ])
                     ->columns(1),
             ]);
@@ -73,13 +69,12 @@ class BahanbakuResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('nama')->sortable()->searchable(),
+                TextColumn::make('kode_bbaku')->sortable()->searchable(),
+                TextColumn::make('nama_bbaku')->sortable()->searchable(),
                 TextColumn::make('satuan')->sortable(),
                 TextColumn::make('harga')->sortable()
                 ->formatStateUsing(fn ($state) => formatRupiah($state))
                 ->sortable(),
-                TextColumn::make('stok')->sortable(),
-                TextColumn::make('tempat')->sortable(),
             ])
             ->filters([
                 //
