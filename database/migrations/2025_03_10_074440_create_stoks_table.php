@@ -13,9 +13,11 @@ return new class extends Migration
     {
         Schema::create('stoks', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_stok', 8)
+            $table->string('kode_stok')
             ->unique()->required();
-            $table->string('kode_bbaku', 8)
+            $table->string('kode_bbaku')
+            ->required();
+            $table->string('nama_bbaku')
             ->required();
             $table->integer('jml_stok')
             ->required();

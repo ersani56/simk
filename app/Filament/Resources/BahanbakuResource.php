@@ -31,7 +31,7 @@ class BahanbakuResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-beaker';
 
     protected static ?string $navigationGroup= 'Input ';
-    protected static ?string $navigationLabel = 'Bahan baku ';
+    protected static ?string $navigationLabel = 'Bahan Baku ';
 
 
     public static ?string $label = 'bahan baku';
