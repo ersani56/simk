@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('stoks', function (Blueprint $table) {
-            $table->string('nama_bbaku')->after('kode_bbaku');
+        Schema::table('bahanjadis', function (Blueprint $table) {
+            $table->string('satuan')->after('kategori')->nullable();
         });
     }
 
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('stoks', function (Blueprint $table) {
+        Schema::table('bahanjadis', function (Blueprint $table) {
             //
         });
     }
