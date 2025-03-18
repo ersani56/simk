@@ -23,7 +23,7 @@ use PhpParser\Node\Expr\AssignOp\Concat;
 class StokResource extends Resource
 {
     protected static ?string $model = Stok::class;
-    protected static ?string $navigationGroup= 'Input ';
+    protected static ?string $navigationGroup= 'Master';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 

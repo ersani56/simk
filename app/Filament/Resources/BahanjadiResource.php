@@ -22,7 +22,7 @@ use App\Filament\Resources\BahanjadiResource\RelationManagers;
 class BahanjadiResource extends Resource
 {
     protected static ?string $model = Bahanjadi::class;
-    protected static ?string $navigationGroup= 'Input ';
+    protected static ?string $navigationGroup= 'Master';
     protected static ?string $navigationLabel = 'Produk';
     protected static ?string $navigation= 'Produk';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

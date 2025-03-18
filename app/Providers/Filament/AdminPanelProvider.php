@@ -23,6 +23,7 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->sidebarWidth('w-64')
             ->default()
             ->id('admin')
             ->path('admin')
