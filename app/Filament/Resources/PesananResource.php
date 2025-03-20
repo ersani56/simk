@@ -15,8 +15,6 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use App\Filament\Resources\PesananResource\Pages;
 
-use function Laravel\Prompts\select;
-
 class PesananResource extends Resource
 {
     protected static ?string $model = Pesanan::class;
@@ -24,11 +22,30 @@ class PesananResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+
     public static function form(Form $form): Form
     {
+
+        function generateNoFaktur()
+        {
+            $tanggal = date('dmy'); // Format: 180324 (18 Maret 2024)
+            $lastOrder = Pesanan::where('no_faktur', 'LIKE', $tanggal . '%')->latest('no_faktur')->first();
+
+            if ($lastOrder) {
+                $lastNumber = (int)substr($lastOrder->no_faktur, -3);
+                $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
+            } else {
+                $newNumber = '001';
+            }
+
+            return 'INV'.$tanggal . $newNumber;
+        }
+
         return $form
             ->schema([
                 TextInput::make('no_faktur')
+                ->default(fn () => generateNoFaktur())
                 ->required()
                 ->unique(),
                 Select::make('kode_plg')
