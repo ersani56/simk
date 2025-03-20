@@ -2,27 +2,25 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
+use filament;
 use Filament\Tables;
 use App\Models\Pesanan;
 use Filament\Forms\Form;
-use App\Models\Bahanbaku;
 use App\Models\Bahanjadi;
+use App\Models\Pelanggan;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PesananResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\PesananResource\RelationManagers;
-use App\Models\Pelanggan;
+
+use function Laravel\Prompts\select;
 
 class PesananResource extends Resource
 {
     protected static ?string $model = Pesanan::class;
-    protected static ?string $navigationGroup= 'Transaksi ';
+    protected static ?string $navigationGroup= 'Transaksi';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -51,15 +49,15 @@ class PesananResource extends Resource
                 ->searchable()
                 ->reactive() // Aktifkan reaktivitas Livewire
                 ->afterStateUpdated(function ($state, callable $set) {
-                        // Ambil kode_bbaku berdasarkan id yang dipilih
+                $set('gambar1', Bahanjadi::find($state)?->image);
                 $bahanBaku = Bahanjadi::find($state);
                 if ($bahanBaku) {
                         $set('kode_bjadi', $bahanBaku->kode_bbaku);
+
                     }
                 })
                 ->required()
                 ->label('Nama Produk'),
-
                 TextInput::make('jumlah')
                 ->required()
                 ->numeric(),
@@ -75,7 +73,18 @@ class PesananResource extends Resource
                 TextInput::make('harga')
                 ->required()
                 ->numeric(),
-            ]);
+                TextInput::make('catatan'),
+                Select::make('status')->options([
+                    'antrian'=>'antrian',
+                    'dipotong'=>'dipotong',
+                    'dijahit'=>'dijahit',
+                    'dipotong'=>'dipotong',
+                    'disablon'=>'disablon',
+                    'dipacking'=>'dipacking',
+                    'selesai'=>'selesai',
+                ]),
+            ])
+            ->columns(1);
     }
 
     public static function table(Table $table): Table
@@ -89,12 +98,15 @@ class PesananResource extends Resource
                 TextColumn::make('harga')->sortable()
                 ->formatStateUsing(fn ($state) => formatRupiah($state))
                 ->sortable(),
+                TextColumn::make('status')->sortable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                ->label('')
+                ->tooltip('Edit'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

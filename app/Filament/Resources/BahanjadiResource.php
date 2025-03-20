@@ -2,22 +2,19 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use App\Models\Bahanjadi;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Card;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\BahanjadiResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\BahanjadiResource\RelationManagers;
 
 class BahanjadiResource extends Resource
 {
@@ -99,8 +96,18 @@ class BahanjadiResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                ->label('')
+                ->tooltip('Hapus'),
+                Tables\Actions\EditAction::make()
+                ->label('')
+                ->tooltip('Edit'),
+                Action::make('addToCart')
+                ->label('')
+                ->icon('heroicon-o-shopping-cart')
+                ->action(fn (Bahanjadi $record) => self::addToCart($record))
+                ->color('success')
+                ->tooltip('Tambah ke keranjang'),
 
             ])
             ->bulkActions([

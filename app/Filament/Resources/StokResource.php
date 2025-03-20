@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use App\Models\Stok;
 use Filament\Tables;
 use Filament\Forms\Form;
@@ -13,17 +12,13 @@ use Filament\Forms\Components\Card;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Filters\SelectFilter;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\StokResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\StokResource\RelationManagers;
-use PhpParser\Node\Expr\AssignOp\Concat;
 
 class StokResource extends Resource
 {
     protected static ?string $model = Stok::class;
-    protected static ?string $navigationGroup= 'Master';
+    protected static ?string $navigationGroup= 'Transaksi';
+    protected static ?string $navigationLabel = 'Pembelian';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -86,8 +81,12 @@ class StokResource extends Resource
 
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make(),
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                ->label('')
+                ->tooltip('Hapus'),
+                Tables\Actions\EditAction::make()
+                ->label('')
+                ->tooltip('Edit'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

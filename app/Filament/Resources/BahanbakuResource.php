@@ -80,8 +80,12 @@ class BahanbakuResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                ->label('')
+                ->tooltip('Hapus'),
+                Tables\Actions\EditAction::make()
+                ->label('')
+                ->tooltip('Edit'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
