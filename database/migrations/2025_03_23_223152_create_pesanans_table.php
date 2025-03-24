@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('pelanggans', function (Blueprint $table) {
-            $table->renameColumn('kode_pelanggan', 'kode_plg');
+        Schema::create('pesanans', function (Blueprint $table) {
+            $table->id();
+            $table->string('no_faktur',12)->unique();
+            $table->string('kode_plg',8);
+            $table->date('tanggal');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('pelanggans', function (Blueprint $table) {
-            $table->renameColumn('kode_plg','kode_pelanggan');
-        });
+        Schema::dropIfExists('pesanans');
     }
 };

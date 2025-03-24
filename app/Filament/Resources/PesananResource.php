@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use filament;
+use Filament\Forms;
 use Filament\Tables;
 use App\Models\Pesanan;
 use Filament\Forms\Form;
@@ -11,123 +11,108 @@ use App\Models\Pelanggan;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
+use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PesananResource\Pages;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\PesananResource\RelationManagers;
+use App\Filament\Resources\PesananResource\RelationManagers\PesananDetailsRelationManager;
 
 class PesananResource extends Resource
 {
     protected static ?string $model = Pesanan::class;
-    protected static ?string $navigationGroup= 'Transaksi';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-
-
+    protected static ?string $navigationGroup= 'Transaksi';
     public static function form(Form $form): Form
     {
-
-        function generateNoFaktur()
-        {
-            $tanggal = date('dmy'); // Format: 180324 (18 Maret 2024)
-            $lastOrder = Pesanan::where('no_faktur', 'LIKE', $tanggal . '%')->latest('no_faktur')->first();
-
-            if ($lastOrder) {
-                $lastNumber = (int)substr($lastOrder->no_faktur, -3);
-                $newNumber = str_pad($lastNumber + 1, 3, '0', STR_PAD_LEFT);
-            } else {
-                $newNumber = '001';
-            }
-
-            return 'INV'.$tanggal . $newNumber;
-        }
-
         return $form
             ->schema([
                 TextInput::make('no_faktur')
-                ->default(fn () => generateNoFaktur())
+                ->label('No Faktur')
                 ->required()
-                ->unique(),
+                ->unique(Pesanan::class)
+                ->maxLength(20),
                 Select::make('kode_plg')
-                ->options(Pelanggan::query()->pluck('nama_plg','kode_plg'))
+                ->label('Nama Pelanggan')
+                ->options(Pelanggan::pluck('nama_plg', 'kode_plg')) // Ambil kode_barang sebagai opsi
                 ->searchable()
-                ->reactive() // Aktifkan reaktivitas Livewire
-                ->afterStateUpdated(function ($state, callable $set) {
-                        // Ambil kode_bbaku berdasarkan id yang dipilih
-                $bahanBaku = Pelanggan::find($state);
-                if ($bahanBaku) {
-                        $set('kode_plg', $bahanBaku->kode_bbaku);
-                    }
-                })
+                ->required(),
+            DatePicker::make('tanggal')
+                ->label('Tanggal')
                 ->required()
-                ->label('Nama Pelanggan'),
-                Select::make('kode_bjadi')
-                ->options(Bahanjadi::query()->pluck('nama_bjadi','kode_bjadi'))
-                ->searchable()
-                ->reactive() // Aktifkan reaktivitas Livewire
-                ->afterStateUpdated(function ($state, callable $set) {
-                $set('gambar1', Bahanjadi::find($state)?->image);
-                $bahanBaku = Bahanjadi::find($state);
-                if ($bahanBaku) {
-                        $set('kode_bjadi', $bahanBaku->kode_bbaku);
-
-                    }
-                })
-                ->required()
-                ->label('Nama Produk'),
-                TextInput::make('jumlah')
-                ->required()
-                ->numeric(),
-                Select::make('ukuran')->options([
-                    'S'=>'S',
-                    'M'=>'M',
-                    'L'=>'L',
-                    'XL'=>'XL',
-                    'XXL'=>'XXL',
-                    'XXXL'=>'XXXL',
-                    'Jumbo'=>'Jumbo',
-                ])->label('Ukuran'),
-                TextInput::make('harga')
-                ->required()
-                ->numeric(),
-                TextInput::make('catatan'),
-                Select::make('status')->options([
-                    'antrian'=>'antrian',
-                    'dipotong'=>'dipotong',
-                    'dijahit'=>'dijahit',
-                    'dipotong'=>'dipotong',
-                    'disablon'=>'disablon',
-                    'dipacking'=>'dipacking',
-                    'selesai'=>'selesai',
-                ]),
-            ])
-            ->columns(1);
+                ->default(today()),
+            // **Detail Pesanan**
+            Repeater::make('pesananDetails')
+                ->relationship('pesananDetails')
+                ->schema([
+                    Select::make('kode_bjadi')
+                    ->label('Kode Barang')
+                    ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi')) // Ambil kode_barang sebagai opsi
+                    ->searchable()
+                    ->required(),
+                    TextInput::make('ukuran')
+                        ->label('Ukuran')
+                        ->required()
+                        ->maxLength(10),
+                    TextInput::make('harga')
+                        ->label('Harga')
+                        ->numeric()
+                        ->required(),
+                    TextInput::make('jumlah')
+                        ->label('Jumlah')
+                        ->numeric()
+                        ->required(),
+                    Select::make('status')
+                        ->label('Status')
+                        ->options([
+                            'antrian' => 'antrian',
+                            'dipotong' => 'dipotong',
+                            'dijahit' => 'dijahit',
+                            'disablon' => 'disablon',
+                            'selesai' => 'selesai',
+                        ])
+                        ->required(),
+                ])
+                ->minItems(1)
+                ->columns(1),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('no_faktur')->sortable()->searchable(),
-                TextColumn::make('kode_bjadi')->sortable()->searchable(),
-                TextColumn::make('jumlah')->sortable(),
-                TextColumn::make('ukuran')->sortable(),
-                TextColumn::make('harga')->sortable()
-                ->formatStateUsing(fn ($state) => formatRupiah($state))
-                ->sortable(),
-                TextColumn::make('status')->sortable(),
+                TextColumn::make('no_faktur')
+                ->label('No Faktur')
+                ->searchable(),
+                TextColumn::make('kode_plg')->label('Nama Pelanggan')->searchable(),
+                TextColumn::make('tanggal')->label('Tanggal')->date(),
+                TextColumn::make('pesanan_details_count')->label('Jumlah Item')
+                ->sortable()
+                ->alignCenter()
+                ->formatStateUsing(function ($state) {
+                    return $state . ' item';// Contoh: "5 item"
+                }),
             ])
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make()
-                ->label('')
-                ->tooltip('Edit'),
-            ])
+            ->defaultSort('no_faktur', 'desc')
+            ->modifyQueryUsing(function ($query) {
+                return $query->withCount('pesananDetails'); // Eager loading untuk menghitung jumlah item
+            })
+                ->actions([
+                Tables\Actions\ViewAction::make()->label('')->tooltip('detail'),
+                Tables\Actions\DeleteAction::make()->label('')->tooltip('hapus'),
+                Tables\Actions\EditAction::make()->label('')->tooltip('ubah'),
+                ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
@@ -135,7 +120,7 @@ class PesananResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PesananDetailsRelationManager::class,
         ];
     }
 
