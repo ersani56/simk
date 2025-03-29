@@ -2,23 +2,17 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use App\Models\Bahanbaku;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Card;
-use function Laravel\Prompts\select;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\BahanbakuResource\Pages;
 use NumberFormatter;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\BahanbakuResource\RelationManagers;
-
 function formatRupiah($amount) {
     $formatter = new NumberFormatter('id_ID', NumberFormatter::CURRENCY);
     return $formatter->formatCurrency($amount, 'IDR');
@@ -30,11 +24,15 @@ class BahanbakuResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-beaker';
 
-    protected static ?string $navigationGroup= 'Master';
+    protected static ?string $navigationGroup= 'Admin';
     protected static ?string $navigationLabel = 'Bahan Baku ';
 
 
     public static ?string $label = 'bahan baku';
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
     public static function form(Form $form): Form
     {
         return $form

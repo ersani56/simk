@@ -2,17 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +22,7 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -45,9 +45,19 @@ class User extends Authenticatable implements FilamentUser
         'password' => 'hashed',
     ];
 
-    public function canAccessPanel(\Filament\Panel $panel): bool
+    /**
+     * Menentukan apakah user bisa mengakses Filament.
+     */
+    public function canAccessFilament(): bool
     {
-        return true; // Pastikan sementara return true agar semua user bisa masuk
+        return $this->hasRole('admin','user'); // Hanya admin yang bisa akses Filament
     }
 
+    /**
+     * Menentukan apakah user bisa mengakses panel Filament.
+     */
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        return true; // Bisa akses jika punya role 'admin' atau 'user'
+    }
 }

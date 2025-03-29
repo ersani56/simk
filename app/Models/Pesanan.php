@@ -13,6 +13,28 @@ class Pesanan extends Model
 
     protected $fillable = ['no_faktur', 'kode_plg', 'tanggal'];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($pesanan) {
+            $pesanan->no_faktur = self::generateInvoiceNumber();
+        });
+    }
+
+    public static function generateInvoiceNumber()
+    {
+        $date = now()->format('dmy'); // Format: 250324 (25 Maret 2024)
+        $lastOrder = self::whereDate('tanggal', now())->latest('id')->first();
+        $nextNumber = $lastOrder ? ((int) substr($lastOrder->no_faktur, -3)) + 1 : 1;
+
+        return 'INV' . $date . str_pad($nextNumber, 3, '0', STR_PAD_LEFT);
+    }
+    public function getNoFakturAttribute($value)
+    {
+        return $value ?? self::generateInvoiceNumber();
+    }
+
     public function pesananDetails(): HasMany
     {
         return $this->hasMany(PesananDetail::class, 'no_faktur', 'no_faktur');

@@ -2,29 +2,29 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Stok;
-use App\Filament\Resources\StokResource;
-use Filament\Widgets\StatsOverviewWidget\Stat;
+use App\Models\PesananDetail;
+use Filament\Widgets\StatsOverviewWidget\Card;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 
 class StatsOverview extends BaseWidget
 {
-    protected function getStats(): array
+    protected function getCards(): array
     {
-        $CountStok = Stok::Count();
         return [
-            Stat::make('Stok', value: $CountStok . ' Stok')
-            ->description('32k increase')
-            ->descriptionIcon('heroicon-m-arrow-trending-up')
-            ->color('success'),
-            Stat::make('Bounce rate', '21%')
-            ->description('7% increase')
-            ->descriptionIcon('heroicon-m-arrow-trending-down')
-            ->color('danger'),
-            Stat::make('Average time on page', '3:12')
-            ->description('3% increase')
-            ->descriptionIcon('heroicon-m-arrow-trending-up')
-            ->color('success'),
+            Card::make('Pesanan - Antrian', fn () => PesananDetail::where('status', 'antrian')->count())
+                ->color('warning'),
+
+            Card::make('Pesanan Diproses Potong', fn () => PesananDetail::where('status', 'Proses Potong')->count())
+                ->color('info'),
+
+            Card::make('Pesanan Proses Jahit', fn () => PesananDetail::where('status', 'Proses Jahit')->count())
+                ->color('primary'),
+
+            Card::make('Pesanan Proses Packing', fn () => PesananDetail::where('status', 'Proses Packing')->count())
+                ->color('primary'),
+
+            Card::make('Pesanan Selesai', fn () => PesananDetail::where('status', 'Selesai')->count())
+                ->color('success'),
         ];
     }
 }

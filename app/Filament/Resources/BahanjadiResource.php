@@ -19,11 +19,14 @@ use App\Filament\Resources\BahanjadiResource\Pages;
 class BahanjadiResource extends Resource
 {
     protected static ?string $model = Bahanjadi::class;
-    protected static ?string $navigationGroup= 'Master';
+    protected static ?string $navigationGroup= 'Admin';
     protected static ?string $navigationLabel = 'Produk';
     protected static ?string $navigation= 'Produk';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
     public static function form(Form $form): Form
     {
         return $form

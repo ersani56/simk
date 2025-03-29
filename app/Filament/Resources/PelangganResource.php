@@ -15,10 +15,13 @@ use App\Filament\Resources\PelangganResource\Pages;
 class PelangganResource extends Resource
 {
     protected static ?string $model = Pelanggan::class;
-    protected static ?string $navigationGroup= 'Master';
+    protected static ?string $navigationGroup= 'Admin';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
     public static function form(Form $form): Form
     {
         return $form
@@ -45,7 +48,7 @@ class PelangganResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('kode_plgn')->sortable()->searchable(),
+                TextColumn::make('kode_plg')->sortable()->searchable(),
                 TextColumn::make('nama_plg')->sortable()->searchable(),
                 TextColumn::make('alamat')->sortable(),
                 TextColumn::make('telepon')->sortable(),

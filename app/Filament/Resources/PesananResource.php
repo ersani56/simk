@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use App\Models\Pesanan;
 use Filament\Forms\Form;
@@ -15,10 +14,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
-use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PesananResource\Pages;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use App\Filament\Resources\PesananResource\RelationManagers;
 use App\Filament\Resources\PesananResource\RelationManagers\PesananDetailsRelationManager;
 
 class PesananResource extends Resource
@@ -27,6 +23,7 @@ class PesananResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup= 'Transaksi';
+
     public static function form(Form $form): Form
     {
         return $form
@@ -34,30 +31,72 @@ class PesananResource extends Resource
                 TextInput::make('no_faktur')
                 ->label('No Faktur')
                 ->required()
+                ->default(fn() => Pesanan::generateInvoiceNumber())
+                ->disabled()
                 ->unique(Pesanan::class)
-                ->maxLength(20),
+                ->maxLength(12)
+                ->dehydrated(),
                 Select::make('kode_plg')
                 ->label('Nama Pelanggan')
                 ->options(Pelanggan::pluck('nama_plg', 'kode_plg')) // Ambil kode_barang sebagai opsi
                 ->searchable()
                 ->required(),
-            DatePicker::make('tanggal')
+                DatePicker::make('tanggal')
                 ->label('Tanggal')
                 ->required()
                 ->default(today()),
+
             // **Detail Pesanan**
             Repeater::make('pesananDetails')
                 ->relationship('pesananDetails')
                 ->schema([
                     Select::make('kode_bjadi')
-                    ->label('Kode Barang')
-                    ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi')) // Ambil kode_barang sebagai opsi
+                    ->label('Nama Produk')
+                    ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
                     ->searchable()
-                    ->required(),
-                    TextInput::make('ukuran')
-                        ->label('Ukuran')
-                        ->required()
-                        ->maxLength(10),
+                    ->live()
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(fn ($state, $set) =>
+                        $set('nama_bjadi', Bahanjadi::where('kode_bjadi', $state)->value('nama_bjadi'))
+                ),
+                    Select::make('ukuran')->options([
+                        'S'=>'S',
+                        'M'=>'M',
+                        'L'=>'L',
+                        'XL'=>'XL',
+                        'XXL'=>'XXL',
+                        'XXXL'=>'XXXL',
+                        'Jumbo'=>'Jumbo',
+                        'S Pendek'=>'S Pendek',
+                        'S Panjang'=>'S Panjang',
+                        'S Laki-laki'=>'S Laki-laki',
+                        'S Perempuan'=>'S Perempuan',
+                        'M Pendek'=>'M Pendek',
+                        'M Panjang'=>'M Panjang',
+                        'M Laki-laki'=>'M Laki-laki',
+                        'M Perempuan'=>'M Peremuan',
+                        'L Pendek'=>'L Pendek',
+                        'L Panjang'=>'L Panjang',
+                        'L Laki-laki'=>'L Laki-laki',
+                        'L Perempuan'=>'L Perempuan',
+                        'XL Pendek'=>'XL Pendek',
+                        'XL Panjang'=>'XL Panjang',
+                        'XL Laki-laki'=>'XL Laki-laki',
+                        'XL Perempuan'=>'XL Perempuan',
+                        'XXL Pendek'=>'XXL Pendek',
+                        'XXL Panjang'=>'XXL Panjang',
+                        'XXL Laki-laki'=>'XXL Laki-laki',
+                        'XXL Perempuan'=>'XXL Perempuan',
+                        'XXXL Pendek'=>'XXXL Pendek',
+                        'XXXL Panjang'=>'XXXL Panjang',
+                        'XXXL Laki-laki'=>'XXXL Laki-laki',
+                        'XXXL Perempuan'=>'XXXL Perempuan',
+                        'Jumbo Pendek'=>'Jumbo Pendek',
+                        'Jumbo Panjang'=>'Jumbo Panjang',
+                        'Jumbo Laki-laki'=>'Jumbo Laki-laki',
+                        'Jumbo Perempuan'=>'Jumbo Perempuan',
+                    ]),
                     TextInput::make('harga')
                         ->label('Harga')
                         ->numeric()
@@ -70,9 +109,13 @@ class PesananResource extends Resource
                         ->label('Status')
                         ->options([
                             'antrian' => 'antrian',
-                            'dipotong' => 'dipotong',
-                            'dijahit' => 'dijahit',
-                            'disablon' => 'disablon',
+                            'proses potong' => 'proses potong',
+                            'selesai potong' => 'selesai potong',
+                            'proses jahit' => 'proses jahit',
+                            'selesai jahit' => 'selesai jahit',
+                            'proses sablon' => 'proses sablon',
+                            'selesai sablon' => 'proses sablon',
+                            'proses packing' => 'proses packing',
                             'selesai' => 'selesai',
                         ])
                         ->required(),
