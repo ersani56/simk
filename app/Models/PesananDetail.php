@@ -27,4 +27,8 @@ class PesananDetail extends Model
     {
         return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
     }
+    public function bahanjadi()
+    {
+        return $this->belongsTo(BahanJadi::class, 'kode_bjadi', 'kode_bjadi');
+    }
 }

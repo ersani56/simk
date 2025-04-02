@@ -41,7 +41,9 @@ class BahanbakuResource extends Resource
                     ->schema([
                         TextInput::make('kode_bbaku')
                         ->label('Kode bahan baku')
-                        ->required()
+                        ->default(fn () => Bahanbaku::generateKodeBB()) // Generate kode otomatis
+                        ->disabled()
+                        ->dehydrated()
                         ->unique(ignorable:fn($record)=>$record),
                         TextInput::make('nama_bbaku')
                         ->label('Nama bahan baku')

@@ -35,7 +35,9 @@ class BahanjadiResource extends Resource
                 ->schema([
                     TextInput::make('kode_bjadi')
                     ->label('Kode Produk')
+                    ->disabled()
                     ->required()
+                    ->dehydrated()
                     ->unique(ignorable:fn($record)=>$record),
                     TextInput::make('nama_bjadi')
                     ->label('Nama Produk')
@@ -48,7 +50,11 @@ class BahanjadiResource extends Resource
                         'Batik'=>'Batik',
                         'Celana'=>'Celana',
                         'Lainnya'=>'Lainnya',
-                    ])->label('Kategori'),
+                    ])
+                    ->label('Kategori')
+                    ->reactive() // Memicu perubahan saat dipilih
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('kode_bjadi', Bahanjadi::generateKodeP($state)))
+                    ->required(),
                     Select::make('satuan')->options([
                         'Pcs'=>'Pcs',
                         'Stel'=>'Stel',

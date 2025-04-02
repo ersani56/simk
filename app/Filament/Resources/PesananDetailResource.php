@@ -9,6 +9,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class PesananDetailResource extends Resource
 {
@@ -19,6 +20,11 @@ class PesananDetailResource extends Resource
     protected static ?string $navigationLabel = 'Proses Produksi';
     protected static ?string $modelLabel = 'Proses Produksi';
     protected static ?string $navigationGroup = 'Produksi';
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('bahanjadi');
+    }
 
     // Hapus form karena tidak diperlukan
     public static function form(Form $form): Form
@@ -40,21 +46,22 @@ class PesananDetailResource extends Resource
                     ->searchable()
                     ->label('Kode Barang'),
                 Tables\Columns\TextColumn::make('ukuran'),
-                Tables\Columns\TextColumn::make('harga')
-                    ->money()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('jumlah')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'antrian' => 'gray',
-                        'selesai dipotong' => 'blue',
-                        'selesai dijahit' => 'indigo',
-                        'selesai di sablon' => 'purple',
-                        'selesai' => 'success',
-                        default => 'gray',
+                    ->color(fn (string $state): string => match (strtolower(trim($state))) {
+                    'antrian' => 'gray',
+                    'dipotong' => 'blue',
+                    'dijahit' => 'indigo',
+                    'disablon' => 'purple',
+                    'selesai' => 'success',
+                    // Backup jika ada variasi penulisan
+                    'selesai dipotong' => 'blue',
+                    'selesai dijahit' => 'indigo',
+                    'selesai disablon' => 'purple',
+                    default => 'yellow',
                     }),
                 Tables\Columns\TextColumn::make('pemotong')
                     ->label('Pemotong')
@@ -66,16 +73,18 @@ class PesananDetailResource extends Resource
                     ->label('Penyablon')
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('keterangan')
-                    ->limit(20),
+                ->label('Keterangan')
+                ->wrap(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'antrian' => 'Antrian',
-                        'selesai dipotong' => 'Selesai Dipotong',
-                        'selesai dijahit' => 'Selesai Dijahit',
-                        'selesai di sablon' => 'Selesai Disablon',
-                        'selesai' => 'Selesai',
+                        'antrian' => 'antrian',
+                        'dipotong' => 'dipotong',
+                       // ->icon ('heroicon-o-check'),
+                        'dijahit' => 'dijahit',
+                        'disablon' => 'disablon',
+                        'selesai' => 'selesai',
                     ]),
             ])
             ->actions([
@@ -84,11 +93,11 @@ class PesananDetailResource extends Resource
                 ->form([
                     Forms\Components\Select::make('status')
                         ->options([
-                            'antrian' => 'Antrian',
-                            'selesai dipotong' => 'Selesai Dipotong',
-                            'selesai dijahit' => 'Selesai Dijahit',
-                            'selesai di sablon' => 'Selesai Disablon',
-                            'selesai' => 'Selesai',
+                            'antrian' => 'antrian',
+                            'dipotong' => 'dipotong',
+                            'dijahit' => 'dijahit',
+                            'disablon' => 'disablon', // Pastikan tidak ada typo
+                            'selesai' => 'selesai',
                         ])
                         ->required()
                         ->default(function (PesananDetail $record) {
@@ -101,12 +110,11 @@ class PesananDetailResource extends Resource
 
                     $updateData = ['status' => $status];
 
-                    // Update kolom pekerja sesuai status baru
-                    if ($status === 'selesai dipotong') {
+                    if ($status === 'dipotong') {
                         $updateData['pemotong'] = $userName;
-                    } elseif ($status === 'selesai dijahit') {
+                    } elseif ($status === 'dijahit') {
                         $updateData['penjahit'] = $userName;
-                    } elseif ($status === 'selesai di sablon') {
+                    } elseif ($status === 'disablon') {
                         $updateData['penyablon'] = $userName;
                     }
 

@@ -29,8 +29,10 @@ class PelangganResource extends Resource
             Card::make()
             ->schema([
                 TextInput::make('kode_plg')
-                ->label('Kode Pelanggan')
-                ->required()
+                ->label('Pelanggan')
+                ->default(fn () => Pelanggan::generateKodeP()) // Generate kode otomatis
+                ->disabled()
+                ->dehydrated()
                 ->unique(ignorable:fn($record)=>$record),
                 TextInput::make('nama_plg')
                 ->label('Nama Pelanggan')
