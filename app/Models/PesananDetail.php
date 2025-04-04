@@ -29,6 +29,6 @@ class PesananDetail extends Model
     }
     public function bahanjadi()
     {
-        return $this->belongsTo(BahanJadi::class, 'kode_bjadi', 'kode_bjadi');
+        return $this->belongsTo(Bahanjadi::class, 'kode_bjadi', 'kode_bjadi');
     }
 }

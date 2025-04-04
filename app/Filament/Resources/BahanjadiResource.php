@@ -22,7 +22,7 @@ class BahanjadiResource extends Resource
     protected static ?string $navigationGroup= 'Admin';
     protected static ?string $navigationLabel = 'Produk';
     protected static ?string $navigation= 'Produk';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->user()->hasRole('admin');
@@ -64,11 +64,11 @@ class BahanjadiResource extends Resource
                     ->numeric()
                     ->prefix('Rp'),
                     FileUpload::make('gambar1')
-                    ->disk('public') // Simpan ke storage/public
-                    ->directory('products') // Simpan dalam folder storage/app/public/products
-                    ->image() // Hanya menerima gambar
-                    ->imageEditor() // Fitur crop & edit (opsional)
-                    ->maxSize(2048), // Batas 2MB
+                    ->disk('public_html_storage') // <- pakai disk yang baru
+                    ->directory('') // kosongkan supaya simpan langsung di storage/products
+                    ->image()
+                    ->imageEditor()
+                    ->maxSize(1024),
                     FileUpload::make('gambar2')
                     ->disk('public') // Simpan ke storage/public
                     ->directory('products') // Simpan dalam folder storage/app/public/products
@@ -110,7 +110,7 @@ class BahanjadiResource extends Resource
                 ->tooltip('Hapus'),
                 Tables\Actions\EditAction::make()
                 ->label('')
-                ->tooltip('Edit'),
+                ->tooltip('Ubah'),
                 Action::make('addToCart')
                 ->label('')
                 ->icon('heroicon-o-shopping-cart')

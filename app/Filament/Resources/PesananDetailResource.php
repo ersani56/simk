@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PesananDetailResource\Pages;
-use App\Models\PesananDetail;
 use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\PesananDetail;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\PesananDetailResource\Pages;
 
 class PesananDetailResource extends Resource
 {
@@ -42,9 +43,27 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('no_faktur')
                     ->searchable()
                     ->label('No. Faktur'),
-                Tables\Columns\TextColumn::make('kode_bjadi')
-                    ->searchable()
-                    ->label('Kode Barang'),
+                Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')
+                ->label('Nama Produk')
+                ->searchable()
+                ->sortable(),
+                // ImageColumn::make('bahanjadi.gambar1')
+                // ->label('Gambar')
+                // ->disk('public') // Sesuaikan dengan disk yang kamu pakai
+                // ->circular()
+                // ->size(60),
+                Tables\Columns\TextColumn::make('bahanjadi.gambar1')
+                ->label('Gambar')
+                ->formatStateUsing(function ($state) {
+                    $url = asset("storage/{$state}");
+
+                    return <<<HTML
+                        <a href="{$url}" target="_blank" title="Klik untuk perbesar">
+                            <img src="{$url}" width="50" style="cursor: zoom-in; border-radius: 50%;">
+                        </a>
+                    HTML;
+                })
+                ->html(),
                 Tables\Columns\TextColumn::make('ukuran'),
                 Tables\Columns\TextColumn::make('jumlah')
                     ->numeric()
@@ -86,7 +105,7 @@ class PesananDetailResource extends Resource
                         'disablon' => 'disablon',
                         'selesai' => 'selesai',
                     ]),
-            ])
+                ])
             ->actions([
                 Tables\Actions\Action::make('update_status')
                 ->label('Update Status')

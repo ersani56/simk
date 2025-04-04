@@ -17,7 +17,7 @@ class PelangganResource extends Resource
     protected static ?string $model = Pelanggan::class;
     protected static ?string $navigationGroup= 'Admin';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->user()->hasRole('admin');
@@ -64,7 +64,7 @@ class PelangganResource extends Resource
                 ->tooltip('Hapus'),
                 Tables\Actions\EditAction::make()
                 ->label('')
-                ->tooltip('Edit'),
+                ->tooltip('Ubah'),
 
             ])
             ->bulkActions([

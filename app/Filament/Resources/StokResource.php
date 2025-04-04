@@ -86,7 +86,7 @@ class StokResource extends Resource
                 ->tooltip('Hapus'),
                 Tables\Actions\EditAction::make()
                 ->label('')
-                ->tooltip('Edit'),
+                ->tooltip('Ubah'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
