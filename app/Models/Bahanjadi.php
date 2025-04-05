@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Bahanjadi extends Model
 {
     use HasFactory;
-    protected $fillable = ['kode_bjadi','nama_bjadi','kategori','satuan','upah','gambar1','gambar2'];
+    protected $fillable = ['kode_bjadi','nama_bjadi','kategori','satuan','harga','upah_potong','upah_jahit','upah','gambar1','gambar2'];
     public static function generateKodeP($kategori)
     {
         if (!$kategori) {

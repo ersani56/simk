@@ -15,6 +15,9 @@ class PesananDetail extends Model
         'kode_bjadi',
         'ukuran',
         'harga',
+        'upah_potong',
+        'upah_jahit',
+        'upah_sablon',
         'jumlah',
         'status',
         'pemotong',
@@ -31,4 +34,5 @@ class PesananDetail extends Model
     {
         return $this->belongsTo(Bahanjadi::class, 'kode_bjadi', 'kode_bjadi');
     }
+
 }

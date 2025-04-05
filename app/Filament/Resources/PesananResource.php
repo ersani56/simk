@@ -24,6 +24,11 @@ class PesananResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup= 'Transaksi';
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
+
     public static function form(Form $form): Form
     {
         return $form
@@ -57,9 +62,35 @@ class PesananResource extends Resource
                     ->live()
                     ->required()
                     ->reactive()
-                    ->afterStateUpdated(fn ($state, $set) =>
-                        $set('nama_bjadi', Bahanjadi::where('kode_bjadi', $state)->value('nama_bjadi'))
-                ),
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        $bahanjadi = Bahanjadi::where('kode_bjadi', $state)->first();
+                        if ($bahanjadi) {
+                            $set('harga', $bahanjadi->harga);
+                            $set('upah_potong', $bahanjadi->upah_potong);
+                            $set('upah_jahit', $bahanjadi->upah_jahit);
+                            $set('upah_sablon', $bahanjadi->upah);
+                        }
+                    }),
+                TextInput::make('harga')
+                ->label('Harga')
+                ->numeric()
+                ->required()
+                ->prefix('Rp.'),
+                TextInput::make('upah_potong')
+                ->label('Upah potong')
+                ->numeric()
+                ->required()
+                ->prefix('Rp.'),
+                TextInput::make('upah_jahit')
+                ->label('Upah jahit')
+                ->numeric()
+                ->required()
+                ->prefix('Rp.'),
+                TextInput::make('upah_sablon')
+                ->label('Upah sablon')
+                ->numeric()
+                ->required()
+                ->prefix('Rp.'),
                     Select::make('ukuran')->options([
                         'S'=>'S',
                         'M'=>'M',
@@ -97,10 +128,6 @@ class PesananResource extends Resource
                         'Jumbo Laki-laki'=>'Jumbo Laki-laki',
                         'Jumbo Perempuan'=>'Jumbo Perempuan',
                     ]),
-                    TextInput::make('harga')
-                        ->label('Harga')
-                        ->numeric()
-                        ->required(),
                     TextInput::make('jumlah')
                         ->label('Jumlah')
                         ->numeric()

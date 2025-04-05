@@ -59,13 +59,29 @@ class BahanjadiResource extends Resource
                         'Pcs'=>'Pcs',
                         'Stel'=>'Stel',
                     ])->label('Satuan'),
+                    TextInput::make('harga')
+                    ->label('Harga')
+                    ->required()
+                    ->numeric()
+                    ->prefix('Rp'),
+                    TextInput::make('upah_potong')
+                    ->label('Upah potong')
+                    ->required()
+                    ->numeric()
+                    ->prefix('Rp'),
+                    TextInput::make('upah_jahit')
+                    ->label('Upah jahit')
+                    ->required()
+                    ->numeric()
+                    ->prefix('Rp'),
                     TextInput::make('upah')
+                    ->label('Upah sablon')
                     ->required()
                     ->numeric()
                     ->prefix('Rp'),
                     FileUpload::make('gambar1')
-                    ->disk('public_html_storage') // <- pakai disk yang baru
-                    ->directory('') // kosongkan supaya simpan langsung di storage/products
+                    ->disk('public') // <- pakai disk yang baru
+                    ->directory('products') // kosongkan supaya simpan langsung di storage/products
                     ->image()
                     ->imageEditor()
                     ->maxSize(1024),
@@ -84,13 +100,29 @@ class BahanjadiResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('kode_bjadi')->sortable()->searchable(),
-                TextColumn::make('nama_bjadi')->sortable()->searchable(),
+                TextColumn::make('kode_bjadi')
+                ->label('Kode')
+                ->sortable()
+                ->searchable(),
+                TextColumn::make('nama_bjadi')
+                ->label('Nama produk')
+                ->sortable()
+                ->searchable(),
                 TextColumn::make('kategori')->sortable(),
                 TextColumn::make('satuan')->sortable(),
-                TextColumn::make('upah')->sortable()
-                ->formatStateUsing(fn ($state) => formatRupiah($state))
-                ->sortable(),
+                TextColumn::make('harga')->sortable(),
+                TextColumn::make('upah_potong')
+                ->label('Upah potong')
+                ->sortable()
+                ->formatStateUsing(fn ($state) => formatRupiah($state)),
+                TextColumn::make('upah_jahit')
+                ->label('Upah jahit')
+                ->sortable()
+                ->formatStateUsing(fn ($state) => formatRupiah($state)),
+                TextColumn::make('upah')
+                ->label('Upah sablon')
+                ->sortable()
+                ->formatStateUsing(fn ($state) => formatRupiah($state)),
                 ImageColumn::make('gambar1')
                 ->disk('public') // Ambil dari storage/public
                 ->circular()
