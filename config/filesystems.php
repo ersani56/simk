@@ -36,11 +36,11 @@ return [
             'throw' => false,
         ],
 
-        'public' => [
-            'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => env('APP_URL') . '/storage',
-            'visibility' => 'public',
+    'public' => [
+          'driver' => env('FILESYSTEM_PUBLIC_DRIVER', 'local'),
+          'root' => env('FILESYSTEM_PUBLIC_ROOT', public_path('storage')),
+          'url' => env('FILESYSTEM_PUBLIC_URL', env('APP_URL') . '/storage'),
+           'visibility' => 'public',
         ],
 
         's3' => [

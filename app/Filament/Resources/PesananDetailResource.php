@@ -55,7 +55,7 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('bahanjadi.gambar1')
                 ->label('Gambar')
                 ->formatStateUsing(function ($state) {
-                    $url = asset("storage/{$state}");
+                    $url = asset("storage/products/{$state}");
 
                     return <<<HTML
                         <a href="{$url}" target="_blank" title="Klik untuk perbesar">
