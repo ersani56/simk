@@ -6,9 +6,9 @@ use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
+use App\Models\GajiKaryawan;
 use App\Models\PesananDetail;
 use Filament\Resources\Resource;
-use Filament\Tables\Columns\ImageColumn;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\PesananDetailResource\Pages;
 
@@ -47,11 +47,6 @@ class PesananDetailResource extends Resource
                 ->label('Nama Produk')
                 ->searchable()
                 ->sortable(),
-                // ImageColumn::make('bahanjadi.gambar1')
-                // ->label('Gambar')
-                // ->disk('public') // Sesuaikan dengan disk yang kamu pakai
-                // ->circular()
-                // ->size(60),
                 Tables\Columns\TextColumn::make('bahanjadi.gambar1')
                 ->label('Gambar')
                 ->formatStateUsing(function ($state) {
@@ -82,13 +77,13 @@ class PesananDetailResource extends Resource
                     'selesai disablon' => 'purple',
                     default => 'yellow',
                     }),
-                Tables\Columns\TextColumn::make('pemotong')
+                Tables\Columns\TextColumn::make('pemotongUser.name')
                     ->label('Pemotong')
                     ->placeholder('-'),
-                Tables\Columns\TextColumn::make('penjahit')
+                Tables\Columns\TextColumn::make('penjahitUser.name')
                     ->label('Penjahit')
                     ->placeholder('-'),
-                Tables\Columns\TextColumn::make('penyablon')
+                Tables\Columns\TextColumn::make('penyablonUser.name')
                     ->label('Penyablon')
                     ->placeholder('-'),
                 Tables\Columns\TextColumn::make('keterangan')
@@ -115,29 +110,53 @@ class PesananDetailResource extends Resource
                             'antrian' => 'antrian',
                             'dipotong' => 'dipotong',
                             'dijahit' => 'dijahit',
-                            'disablon' => 'disablon', // Pastikan tidak ada typo
+                            'disablon' => 'disablon',
                             'selesai' => 'selesai',
                         ])
                         ->required()
-                        ->default(function (PesananDetail $record) {
-                            return $record->status;
-                        }),
                 ])
                 ->action(function (PesananDetail $record, array $data) {
                     $status = $data['status'];
-                    $userName = auth()->user()->name;
+                    $userId = auth()->id();
 
                     $updateData = ['status' => $status];
 
+                    // Deteksi peran dan upah
+                    $peran = null;
+                    $upah = 0;
+
                     if ($status === 'dipotong') {
-                        $updateData['pemotong'] = $userName;
+                        $updateData['pemotong'] = $userId;
+                        $peran = 'pemotong';
+                        $upah = $record->upah_potong;
                     } elseif ($status === 'dijahit') {
-                        $updateData['penjahit'] = $userName;
+                        $updateData['penjahit'] = $userId;
+                        $peran = 'penjahit';
+                        $upah = $record->upah_jahit;
                     } elseif ($status === 'disablon') {
-                        $updateData['penyablon'] = $userName;
+                        $updateData['penyablon'] = $userId;
+                        $peran = 'penyablon';
+                        $upah = $record->upah_sablon;
                     }
 
                     $record->update($updateData);
+
+                    if ($peran) {
+                        // Simpan/Update gaji
+                        GajiKaryawan::updateOrCreate(
+                            [
+                                'pesanan_detail_id' => $record->id,
+                                'karyawan_id' => $userId,
+                                'peran' => $peran,
+                            ],
+                            [
+                                'tanggal_dibayar' => now(),
+                                'jumlah' => $record->jumlah,
+                                'upah' => $upah,
+                                'total' => $record->jumlah * $upah,
+                            ]
+                        );
+                    }
                 })
                 ->visible(function () {
                     // Sesuaikan dengan kebutuhan, misalnya hanya untuk role tertentu

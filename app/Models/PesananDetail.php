@@ -34,5 +34,19 @@ class PesananDetail extends Model
     {
         return $this->belongsTo(Bahanjadi::class, 'kode_bjadi', 'kode_bjadi');
     }
+    public function pemotongUser()
+    {
+        return $this->belongsTo(User::class, 'pemotong');
+    }
+
+    public function penjahitUser()
+    {
+        return $this->belongsTo(User::class, 'penjahit');
+    }
+
+    public function penyablonUser()
+    {
+        return $this->belongsTo(User::class, 'penyablon');
+    }
 
 }
