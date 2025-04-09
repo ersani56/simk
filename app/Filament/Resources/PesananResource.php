@@ -38,7 +38,7 @@ class PesananResource extends Resource
                 ->required()
                 ->default(fn() => Pesanan::generateInvoiceNumber())
                 ->disabled()
-                ->unique(Pesanan::class)
+                ->unique(table: 'pesanans', column: 'no_faktur', ignoreRecord: true)
                 ->maxLength(12)
                 ->dehydrated(),
                 Select::make('kode_plg')

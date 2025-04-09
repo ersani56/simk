@@ -2,15 +2,19 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Forms;
 use Filament\Tables;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\GajiKaryawan;
 use App\Models\PesananDetail;
 use Filament\Resources\Resource;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB; // ⬅️ Ini penting!
 use App\Filament\Resources\PesananDetailResource\Pages;
+
+
 
 class PesananDetailResource extends Resource
 {
@@ -41,8 +45,8 @@ class PesananDetailResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')
-                    ->searchable()
-                    ->label('No. Faktur'),
+                ->searchable()
+                ->label('No. Faktur'),
                 Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')
                 ->label('Nama Produk')
                 ->searchable()
@@ -102,68 +106,211 @@ class PesananDetailResource extends Resource
                     ]),
                 ])
             ->actions([
-                Tables\Actions\Action::make('update_status')
-                ->label('Update Status')
-                ->form([
-                    Forms\Components\Select::make('status')
-                        ->options([
-                            'antrian' => 'antrian',
-                            'dipotong' => 'dipotong',
-                            'dijahit' => 'dijahit',
-                            'disablon' => 'disablon',
-                            'selesai' => 'selesai',
-                        ])
-                        ->required()
-                ])
-                ->action(function (PesananDetail $record, array $data) {
-                    $status = $data['status'];
-                    $userId = auth()->id();
+            // UPDATE STATUS (untuk user & admin)
+            Tables\Actions\Action::make('update_status')
+            ->label('')
+            ->icon('heroicon-m-arrow-up-circle')
+            ->tooltip('Update Status')
+            ->form(function (PesananDetail $record) {
+            $userId = auth()->id();
+            $user = auth()->user();
+            $isAdmin = $user->hasRole('admin');
+$availableStatus = $isAdmin
+    ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai']
+    : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
 
-                    $updateData = ['status' => $status];
+return [
+    Select::make('status')
+        ->options($availableStatus)
+        ->required()
+        ->reactive()
+        ->disableOptionWhen(function (string $value) use ($record, $userId) {
+            return GajiKaryawan::where('pesanan_detail_id', $record->id)
+                ->where('karyawan_id', $userId)
+                ->where('peran', $value)
+                ->exists();
+        }),
 
-                    // Deteksi peran dan upah
-                    $peran = null;
-                    $upah = 0;
+TextInput::make('jumlah')
+    ->label('Jumlah')
+    ->numeric()
+    ->minValue(1)
+    ->required()
+    ->reactive()
+    ->rule(function (callable $get) use ($record) {
+        $status = $get('status');
 
-                    if ($status === 'dipotong') {
-                        $updateData['pemotong'] = $userId;
-                        $peran = 'pemotong';
-                        $upah = $record->upah_potong;
-                    } elseif ($status === 'dijahit') {
-                        $updateData['penjahit'] = $userId;
-                        $peran = 'penjahit';
-                        $upah = $record->upah_jahit;
-                    } elseif ($status === 'disablon') {
-                        $updateData['penyablon'] = $userId;
-                        $peran = 'penyablon';
-                        $upah = $record->upah_sablon;
-                    }
+        if (!$status || !in_array($status, ['dipotong', 'dijahit', 'disablon'])) {
+            return null;
+        }
 
+        $peranMap = [
+            'dipotong' => 'pemotong',
+            'dijahit' => 'penjahit',
+            'disablon' => 'penyablon',
+        ];
+
+        $peran = $peranMap[$status] ?? null;
+
+        if (!$peran) {
+            return null;
+        }
+
+        $sudah = \App\Models\GajiKaryawan::where('pesanan_detail_id', $record->id)
+            ->where('peran', $peran)
+            ->sum('jumlah');
+
+        $sisa = max(0, $record->jumlah - $sudah);
+
+        return "max:$sisa";
+    })
+    ->default(function (callable $get) use ($record) {
+        $status = $get('status');
+
+        if (!$status || !in_array($status, ['dipotong', 'dijahit', 'disablon'])) {
+            return null;
+        }
+
+        $peranMap = [
+            'dipotong' => 'pemotong',
+            'dijahit' => 'penjahit',
+            'disablon' => 'penyablon',
+        ];
+
+        $peran = $peranMap[$status] ?? null;
+
+        $sudah = \App\Models\GajiKaryawan::where('pesanan_detail_id', $record->id)
+            ->where('peran', $peran)
+            ->sum('jumlah');
+
+        return max(0, $record->jumlah - $sudah);
+    })
+    ->hint(function (callable $get) use ($record) {
+        $status = $get('status');
+
+        if (!$status || !in_array($status, ['dipotong', 'dijahit', 'disablon'])) {
+            return null;
+        }
+
+        $peranMap = [
+            'dipotong' => 'pemotong',
+            'dijahit' => 'penjahit',
+            'disablon' => 'penyablon',
+        ];
+
+        $peran = $peranMap[$status] ?? null;
+
+        $sudah = \App\Models\GajiKaryawan::where('pesanan_detail_id', $record->id)
+            ->where('peran', $peran)
+            ->sum('jumlah');
+
+        $sisa = max(0, $record->jumlah - $sudah);
+
+        return "Sisa yang belum dikerjakan: $sisa";
+    }),
+
+];
+
+
+        })
+        ->action(function (PesananDetail $record, array $data) {
+            $status = $data['status'];
+            $jumlah = (int) $data['jumlah'];
+            $userId = auth()->id();
+
+            $updateData = ['status' => $status];
+
+            $peran = null;
+            $upah = 0;
+
+            if ($status === 'dipotong') {
+                $updateData['pemotong'] = $userId;
+                $peran = 'pemotong';
+                $upah = $record->upah_potong;
+            } elseif ($status === 'dijahit') {
+                $updateData['penjahit'] = $userId;
+                $peran = 'penjahit';
+                $upah = $record->upah_jahit;
+            } elseif ($status === 'disablon') {
+                $updateData['penyablon'] = $userId;
+                $peran = 'penyablon';
+                $upah = $record->upah_sablon;
+            }
+
+            if ($peran) {
+                DB::transaction(function () use ($record, $updateData, $userId, $peran, $upah, $jumlah) {
                     $record->update($updateData);
 
-                    if ($peran) {
-                        // Simpan/Update gaji
-                        GajiKaryawan::updateOrCreate(
-                            [
-                                'pesanan_detail_id' => $record->id,
-                                'karyawan_id' => $userId,
-                                'peran' => $peran,
-                            ],
-                            [
-                                'tanggal_dibayar' => now(),
-                                'jumlah' => $record->jumlah,
-                                'upah' => $upah,
-                                'total' => $record->jumlah * $upah,
-                            ]
-                        );
+                    GajiKaryawan::updateOrCreate(
+                        [
+                            'pesanan_detail_id' => $record->id,
+                            'karyawan_id' => $userId,
+                            'peran' => $peran,
+                        ],
+                        [
+                            'tanggal_dibayar' => now(),
+                            'jumlah' => $jumlah,
+                            'upah' => $upah,
+                            'total' => $jumlah * $upah,
+                        ]
+                    );
+                });
+            } else {
+                // Jika hanya status diubah tanpa peran
+                $record->update($updateData);
+            }
+        }),
+
+            // RESET STATUS (untuk admin saja)
+            Tables\Actions\Action::make('reset_status')
+            ->label('')
+            ->icon('heroicon-m-arrow-path')
+            ->tooltip('Reset Status')
+            ->requiresConfirmation()
+            ->visible(fn () => auth()->user()->hasRole('admin'))
+            ->action(function (PesananDetail $record) {
+            // Tentukan peran & user terakhir yang mengerjakan
+            $lastGaji = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                ->latest()
+                ->first();
+
+            if ($lastGaji) {
+                $peran = $lastGaji->peran;
+                $userId = $lastGaji->karyawan_id;
+
+                DB::transaction(function () use ($record, $peran, $userId) {
+                    // Hapus data gaji
+                    GajiKaryawan::where('pesanan_detail_id', $record->id)
+                        ->where('peran', $peran)
+                        ->where('karyawan_id', $userId)
+                        ->delete();
+
+                    // Kosongkan kolom peran user di record
+                    if ($peran === 'pemotong') {
+                        $record->pemotong = null;
+                    } elseif ($peran === 'penjahit') {
+                        $record->penjahit = null;
+                    } elseif ($peran === 'penyablon') {
+                        $record->penyablon = null;
                     }
-                })
-                ->visible(function () {
-                    // Sesuaikan dengan kebutuhan, misalnya hanya untuk role tertentu
-                    return true;
-                }),
-                // Hapus EditAction karena tidak diperlukan
-            ])
+
+                    // Ubah status ke peran terakhir yang masih ada, atau 'antrian'
+                    $statusBaru = 'antrian';
+
+                    if ($record->penyablon) {
+                        $statusBaru = 'disablon';
+                    } elseif ($record->penjahit) {
+                        $statusBaru = 'dijahit';
+                    } elseif ($record->pemotong) {
+                        $statusBaru = 'dipotong';
+                    }
+
+                    $record->status = $statusBaru;
+                    $record->save();
+                });
+            }
+        }),
+    ])
             ->bulkActions([
                 // Hapus bulk actions jika tidak diperlukan
             ])

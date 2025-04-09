@@ -26,6 +26,13 @@ class PesananDetail extends Model
         'keterangan',
     ];
 
+    public function updateIfNull(string $column, $value)
+{
+    if (is_null($this->$column)) {
+        $this->update([$column => $value]);
+    }
+}
+
     public function pesananDetails():BelongsTo
     {
         return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');

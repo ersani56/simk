@@ -44,7 +44,8 @@ class StokResource extends Resource
                         }
                     })
                     ->required()
-                    ->label('Nama Bahan Baku'),
+                    ->label('Nama Bahan Baku')
+                    ->unique(ignorable:fn($record)=>$record),
                     TextInput::make('jml_stok')
                     ->required()
                     ->numeric(),
