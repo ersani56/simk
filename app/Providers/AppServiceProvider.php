@@ -2,10 +2,9 @@
 
 namespace App\Providers;
 
-use Invoice;
 use Livewire\Livewire;
-use App\Models\Pesanan;
-use App\Observers\InvoiceObserver;
+use Filament\Facades\Filament;
+use Filament\Navigation\UserMenuItem;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +25,6 @@ class AppServiceProvider extends ServiceProvider
         Livewire::listen('set-produk', function ($event, $data) {
             session()->flash('selected_product', $data);
         });
+
     }
 }

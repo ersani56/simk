@@ -52,7 +52,19 @@ class PesananDetailResource extends Resource
                 ->searchable()
                 ->sortable(),
                 Tables\Columns\TextColumn::make('bahanjadi.gambar1')
-                ->label('Gambar')
+                ->label('Gbr 1')
+                ->formatStateUsing(function ($state) {
+                    $url = asset("storage/{$state}");
+
+                    return <<<HTML
+                        <a href="{$url}" target="_blank" title="Klik untuk perbesar">
+                            <img src="{$url}" width="50" style="cursor: zoom-in; border-radius: 50%;">
+                        </a>
+                    HTML;
+                })
+                ->html(),
+                Tables\Columns\TextColumn::make('bahanjadi.gambar2')
+                ->label('Gbr 2')
                 ->formatStateUsing(function ($state) {
                     $url = asset("storage/{$state}");
 
@@ -115,21 +127,21 @@ class PesananDetailResource extends Resource
             $userId = auth()->id();
             $user = auth()->user();
             $isAdmin = $user->hasRole('admin');
-$availableStatus = $isAdmin
-    ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai']
-    : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
+            $availableStatus = $isAdmin
+                ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai']
+                : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
 
-return [
-    Select::make('status')
-        ->options($availableStatus)
-        ->required()
-        ->reactive()
-        ->disableOptionWhen(function (string $value) use ($record, $userId) {
-            return GajiKaryawan::where('pesanan_detail_id', $record->id)
-                ->where('karyawan_id', $userId)
-                ->where('peran', $value)
-                ->exists();
-        }),
+            return [
+                Select::make('status')
+                    ->options($availableStatus)
+                    ->required()
+                    ->reactive()
+                    ->disableOptionWhen(function (string $value) use ($record, $userId) {
+                        return GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('karyawan_id', $userId)
+                            ->where('peran', $value)
+                            ->exists();
+                    }),
 
 TextInput::make('jumlah')
     ->label('Jumlah')

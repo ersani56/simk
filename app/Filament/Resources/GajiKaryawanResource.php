@@ -99,14 +99,7 @@ class GajiKaryawanResource extends Resource
         ->default(now()),
             ])
             ->actions([
-                Tables\Actions\DeleteAction::make()->label('')->tooltip('Hapus'),
-                Tables\Actions\EditAction::make()->label('')->tooltip('Ubah'),
-                Tables\Actions\Action::make('cetak_pdf')
-                ->label('')
-                ->tooltip('Cetak')
-                ->url(fn($record) => route('slip-gaji.pdf', $record))
-                ->openUrlInNewTab()
-                ->icon('heroicon-o-printer'),
+                //
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
