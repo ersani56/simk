@@ -16,7 +16,8 @@ class GajiKaryawan extends Model
 
     public function pesananDetail()
     {
-        return $this->belongsTo(PesananDetail::class);
+        return $this->belongsTo(PesananDetail::class, 'pesanan_detail_id');
     }
+
 }
 

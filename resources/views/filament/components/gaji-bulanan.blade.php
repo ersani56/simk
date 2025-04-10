@@ -22,7 +22,9 @@
             <thead>
                 <tr>
                     <th>Peran</th>
-                    <th>Jumlah</th>
+                    <th>Nama produk</th>
+                    <th>Size</th>
+                    <th>Qty</th>
                     <th>Upah</th>
                     <th>Total</th>
                 </tr>
@@ -31,6 +33,8 @@
                 @foreach($data as $gaji)
                     <tr>
                         <td>{{ $gaji->peran }}</td>
+                        <td>{{ $gaji->pesananDetail?->bahanjadi?->nama_bjadi ?? '-' }}</td>
+                        <td>{{ $gaji->pesananDetail->ukuran ?? '-' }}</td>
                         <td>{{ $gaji->jumlah }}</td>
                         <td>Rp {{ number_format($gaji->upah, 0, ',', '.') }}</td>
                         <td>Rp {{ number_format($gaji->total, 0, ',', '.') }}</td>

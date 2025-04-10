@@ -56,4 +56,9 @@ class PesananDetail extends Model
         return $this->belongsTo(User::class, 'penyablon');
     }
 
+    public function barang()
+    {
+        return $this->belongsTo(Bahanjadi::class, 'barang_id'); // sesuaikan foreign key
+    }
+
 }

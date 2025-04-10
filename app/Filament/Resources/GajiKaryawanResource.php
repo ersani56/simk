@@ -18,6 +18,7 @@ class GajiKaryawanResource extends Resource
     protected static ?string $model = GajiKaryawan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup= 'Laporan';
 
     public static function getEloquentQuery(): Builder
     {
@@ -28,6 +29,7 @@ class GajiKaryawanResource extends Resource
         }
 
         return $query;
+
     }
 
 
@@ -54,6 +56,14 @@ class GajiKaryawanResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('karyawan.name')->label('Nama Karyawan'),
                 Tables\Columns\TextColumn::make('peran')->label('Peran'),
+                Tables\Columns\TextColumn::make('pesananDetail.bahanjadi.nama_bjadi')
+                ->label('Nama Barang')
+                ->sortable()
+                ->searchable(),
+                Tables\Columns\TextColumn::make('pesananDetail.ukuran')
+                ->label('Size')
+                ->sortable()
+                ->searchable(),
                 Tables\Columns\TextColumn::make('jumlah')->label('Jumlah'),
                 Tables\Columns\TextColumn::make('upah')->label('Upah'),
                 Tables\Columns\TextColumn::make('total')->label('Total'),

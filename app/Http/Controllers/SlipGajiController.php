@@ -11,7 +11,7 @@ class SlipGajiController extends Controller
     public function cetakBulanan($bulan)
     {
         $tanggal = Carbon::parse($bulan . '-01');
-        $query = GajiKaryawan::with('karyawan')
+        $query = GajiKaryawan::with(['karyawan', 'pesananDetail.bahanjadi'])
             ->whereMonth('tanggal_dibayar', $tanggal->month)
             ->whereYear('tanggal_dibayar', $tanggal->year);
 
