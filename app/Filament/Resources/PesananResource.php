@@ -17,6 +17,8 @@ use Filament\Forms\Components\DatePicker;
 use App\Filament\Resources\PesananResource\Pages;
 use App\Filament\Resources\PesananResource\RelationManagers\PesananDetailsRelationManager;
 
+use function Laravel\Prompts\select;
+
 class PesananResource extends Resource
 {
     protected static ?string $model = Pesanan::class;
@@ -57,7 +59,7 @@ class PesananResource extends Resource
                 ->schema([
                     Select::make('kode_bjadi')
                     ->label('Nama Produk')
-                    ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
+                    ->options(Bahanjadi::orderBy('nama_bjadi')->pluck('nama_bjadi', 'kode_bjadi'))
                     ->searchable()
                     ->live()
                     ->required()
@@ -71,26 +73,40 @@ class PesananResource extends Resource
                             $set('upah_sablon', $bahanjadi->upah);
                         }
                     }),
-                TextInput::make('harga')
-                ->label('Harga')
-                ->numeric()
-                ->required()
-                ->prefix('Rp.'),
-                TextInput::make('upah_potong')
-                ->label('Upah potong')
-                ->numeric()
-                ->required()
-                ->prefix('Rp.'),
-                TextInput::make('upah_jahit')
-                ->label('Upah jahit')
-                ->numeric()
-                ->required()
-                ->prefix('Rp.'),
-                TextInput::make('upah_sablon')
-                ->label('Upah sablon')
-                ->numeric()
-                ->required()
-                ->prefix('Rp.'),
+                    Select::make('satuan')
+                    ->label('Satuan')
+                    ->options([
+                        'pcs' => 'PCS',
+                        'stel' => 'Stel',
+                    ])
+                    ->required()
+                    ->reactive(), // ini penting agar bisa trigger perubahan
+                    Select::make('kode_jadi')
+                    ->label('Produk Pasangan')
+                    ->options(\App\Models\Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
+                    ->searchable()
+                    ->visible(fn ($get) => $get('satuan') === 'stel') // hanya tampil jika satuan = stel
+                    ->required(fn ($get) => $get('satuan') === 'stel'),
+                    TextInput::make('harga')
+                    ->label('Harga')
+                    ->numeric()
+                    ->required()
+                    ->prefix('Rp.'),
+                    TextInput::make('upah_potong')
+                    ->label('Upah potong')
+                    ->numeric()
+                    ->required()
+                    ->prefix('Rp.'),
+                    TextInput::make('upah_jahit')
+                    ->label('Upah jahit')
+                    ->numeric()
+                    ->required()
+                    ->prefix('Rp.'),
+                    TextInput::make('upah_sablon')
+                    ->label('Upah sablon')
+                    ->numeric()
+                    ->required()
+                    ->prefix('Rp.'),
                     Select::make('ukuran')->options([
                         'S'=>'S',
                         'M'=>'M',
@@ -134,18 +150,17 @@ class PesananResource extends Resource
                         ->required(),
                     Select::make('status')
                         ->label('Status')
+                        ->default(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord ? 'antrian' : null)
                         ->options([
                             'antrian' => 'antrian',
-                            'proses potong' => 'proses potong',
-                            'selesai potong' => 'selesai potong',
-                            'proses jahit' => 'proses jahit',
-                            'selesai jahit' => 'selesai jahit',
-                            'proses sablon' => 'proses sablon',
-                            'selesai sablon' => 'proses sablon',
-                            'proses packing' => 'proses packing',
+                            'dipotong' => 'dipotong',
+                            'dijahit' => 'dijahit',
+                            'disablon' => 'disablon',
                             'selesai' => 'selesai',
                         ])
                         ->required(),
+                    TextInput::make('ket')
+                        ->label('Keterangan'),
                 ])
                 ->minItems(1)
                 ->columns(1),
@@ -159,7 +174,9 @@ class PesananResource extends Resource
                 TextColumn::make('no_faktur')
                 ->label('No Faktur')
                 ->searchable(),
-                TextColumn::make('kode_plg')->label('Nama Pelanggan')->searchable(),
+                TextColumn::make('pelanggan.nama_plg')
+                ->label('Nama Pelanggan')
+                ->searchable(),
                 TextColumn::make('tanggal')->label('Tanggal')->date(),
                 TextColumn::make('pesanan_details_count')->label('Jumlah Item')
                 ->sortable()
@@ -173,7 +190,7 @@ class PesananResource extends Resource
             ])
             ->defaultSort('no_faktur', 'desc')
             ->modifyQueryUsing(function ($query) {
-                return $query->withCount('pesananDetails'); // Eager loading untuk menghitung jumlah item
+                return $query->with('pelanggan')->withCount('pesananDetails');
             })
                 ->actions([
                 Tables\Actions\ViewAction::make()->label('')->tooltip('detail'),

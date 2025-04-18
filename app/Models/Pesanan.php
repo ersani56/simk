@@ -39,4 +39,41 @@ class Pesanan extends Model
     {
         return $this->hasMany(PesananDetail::class, 'no_faktur', 'no_faktur');
     }
+    public function pelanggan()
+    {
+        return $this->belongsTo(\App\Models\Pelanggan::class, 'kode_plg', 'kode_plg');
+    }
+
+    public function pembayaran()
+    {
+        return $this->hasMany(Pembayaran::class, 'no_faktur', 'no_faktur');
+    }
+
+    public function totalPembayaran()
+    {
+        return $this->pembayaran()->sum('jumlah_bayar');
+    }
+    public function detail()
+    {
+        return $this->hasMany(PesananDetail::class, 'no_faktur', 'no_faktur');
+    }
+
+    public function getTotalTagihanAttribute()
+    {
+        return $this->pesananDetails->sum(function ($item) {
+            return $item->harga * $item->jumlah;
+        });
+    }
+
+    public function getTotalBayarAttribute()
+    {
+        return $this->pembayaran->sum('jumlah_bayar');
+    }
+
+    public function getSisaTagihanAttribute()
+    {
+        return $this->total_tagihan - $this->total_bayar;
+    }
+
+
 }

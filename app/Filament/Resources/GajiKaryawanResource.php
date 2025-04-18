@@ -10,7 +10,6 @@ use App\Models\GajiKaryawan;
 use Illuminate\Support\Carbon;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Resources\GajiKaryawanResource\Pages;
 
 class GajiKaryawanResource extends Resource
@@ -35,24 +34,14 @@ class GajiKaryawanResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Tables\Filters\Filter::make('bulan')
-                ->form([
-                    Forms\Components\DatePicker::make('bulan'),
-                ])
-                ->query(function ($query, $data) {
-                    if ($data['bulan']) {
-                        $query->whereMonth('created_at', '=', date('m', strtotime($data['bulan'])))
-                              ->whereYear('created_at', '=', date('Y', strtotime($data['bulan'])));
-                    }
-                })
-            ]);
+        return $form->schema([]);
+
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->recordUrl(null)
             ->columns([
                 Tables\Columns\TextColumn::make('karyawan.name')->label('Nama Karyawan'),
                 Tables\Columns\TextColumn::make('peran')->label('Peran'),
@@ -96,7 +85,7 @@ class GajiKaryawanResource extends Resource
                     if ($data['bulan']) {
                         $tanggal = \Carbon\Carbon::parse($data['bulan']);
                         $query->whereMonth('tanggal_dibayar', $tanggal->month)
-                              ->whereYear('tanggal_dibayar', $tanggal->year);
+                            ->whereYear('tanggal_dibayar', $tanggal->year);
                     }
                 })
 
@@ -130,7 +119,7 @@ class GajiKaryawanResource extends Resource
     {
         return [
             'index' => Pages\ListGajiKaryawans::route('/'),
-            'create' => Pages\CreateGajiKaryawan::route('/create'),
+            //'create' => Pages\CreateGajiKaryawan::route('/create'),
             'edit' => Pages\EditGajiKaryawan::route('/{record}/edit'),
         ];
     }

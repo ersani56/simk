@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Card;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
+use Filament\Tables\Filters\SelectFilter;
 use App\Filament\Resources\PelangganResource\Pages;
 
 class PelangganResource extends Resource
@@ -56,7 +57,13 @@ class PelangganResource extends Resource
                 TextColumn::make('telepon')->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('kode_plg')
+                ->label('Filter Pelanggan')
+                ->options(function () {
+                    return \App\Models\Pelanggan::all()->pluck('nama_plg', 'kode_plg');
+                })
+                ->searchable()
+                ->placeholder('Semua Pelanggan')
             ])
             ->actions([
                 Tables\Actions\DeleteAction::make()

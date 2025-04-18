@@ -3,8 +3,7 @@
 namespace App\Providers;
 
 use Livewire\Livewire;
-use Filament\Facades\Filament;
-use Filament\Navigation\UserMenuItem;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,5 +25,10 @@ class AppServiceProvider extends ServiceProvider
             session()->flash('selected_product', $data);
         });
 
+        Blade::directive('currency', function ($expression) {
+            return "<?php echo 'Rp ' . number_format($expression, 0, ',', '.'); ?>";
+        });
+
     }
+
 }

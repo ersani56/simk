@@ -62,4 +62,9 @@ class User extends Authenticatable implements FilamentUser
     {
         return true; // Bisa akses jika punya role 'admin' atau 'user'
     }
+    public function pesanan()
+    {
+        return $this->hasMany(\App\Models\Pesanan::class, 'id'); // ganti 'user_id' kalau kamu pakai nama lain
+    }
+
 }

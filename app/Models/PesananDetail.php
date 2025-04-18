@@ -27,20 +27,16 @@ class PesananDetail extends Model
     ];
 
     public function updateIfNull(string $column, $value)
-{
-    if (is_null($this->$column)) {
-        $this->update([$column => $value]);
-    }
-}
-
-    public function pesananDetails():BelongsTo
     {
-        return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
+        if (is_null($this->$column)) {
+            $this->update([$column => $value]);
+        }
     }
     public function bahanjadi()
     {
         return $this->belongsTo(Bahanjadi::class, 'kode_bjadi', 'kode_bjadi');
     }
+
     public function pemotongUser()
     {
         return $this->belongsTo(User::class, 'pemotong');
@@ -56,9 +52,11 @@ class PesananDetail extends Model
         return $this->belongsTo(User::class, 'penyablon');
     }
 
-    public function barang()
+    public function pesanan()
     {
-        return $this->belongsTo(Bahanjadi::class, 'barang_id'); // sesuaikan foreign key
+        return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
     }
+
+
 
 }

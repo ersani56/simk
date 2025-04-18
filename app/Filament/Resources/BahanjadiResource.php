@@ -55,10 +55,6 @@ class BahanjadiResource extends Resource
                     ->reactive() // Memicu perubahan saat dipilih
                     ->afterStateUpdated(fn ($state, callable $set) => $set('kode_bjadi', Bahanjadi::generateKodeP($state)))
                     ->required(),
-                    Select::make('satuan')->options([
-                        'Pcs'=>'Pcs',
-                        'Stel'=>'Stel',
-                    ])->label('Satuan'),
                     TextInput::make('harga')
                     ->label('Harga')
                     ->required()
@@ -109,7 +105,6 @@ class BahanjadiResource extends Resource
                 ->sortable()
                 ->searchable(),
                 TextColumn::make('kategori')->sortable(),
-                TextColumn::make('satuan')->sortable(),
                 TextColumn::make('harga')->sortable(),
                 TextColumn::make('upah_potong')
                 ->label('Upah potong')

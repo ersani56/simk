@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Table;
 use App\Models\GajiKaryawan;
 use App\Models\PesananDetail;
+use Pages\EditPesananDetails;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +52,7 @@ class PesananDetailResource extends Resource
                 ->label('Nama Produk')
                 ->searchable()
                 ->sortable(),
+                Tables\Columns\TextColumn::make('satuan'),
                 Tables\Columns\TextColumn::make('bahanjadi.gambar1')
                 ->label('Gbr 1')
                 ->formatStateUsing(function ($state) {
@@ -102,7 +104,7 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('penyablonUser.name')
                     ->label('Penyablon')
                     ->placeholder('-'),
-                Tables\Columns\TextColumn::make('keterangan')
+                Tables\Columns\TextColumn::make('ket')
                 ->label('Keterangan')
                 ->wrap(),
             ])
@@ -281,47 +283,44 @@ TextInput::make('jumlah')
             ->requiresConfirmation()
             ->visible(fn () => auth()->user()->hasRole('admin'))
             ->action(function (PesananDetail $record) {
-            // Tentukan peran & user terakhir yang mengerjakan
-            $lastGaji = GajiKaryawan::where('pesanan_detail_id', $record->id)
-                ->latest()
-                ->first();
+                // Tentukan peran & user terakhir yang mengerjakan
+                $lastGaji = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                    ->latest()
+                    ->first();
 
-            if ($lastGaji) {
-                $peran = $lastGaji->peran;
-                $userId = $lastGaji->karyawan_id;
+                if ($lastGaji) {
+                    $peran = $lastGaji->peran;
+                    $userId = $lastGaji->karyawan_id;
 
-                DB::transaction(function () use ($record, $peran, $userId) {
-                    // Hapus data gaji
-                    GajiKaryawan::where('pesanan_detail_id', $record->id)
-                        ->where('peran', $peran)
-                        ->where('karyawan_id', $userId)
-                        ->delete();
+                    // Hapus data gaji terakhir
+                    $lastGaji->delete();
 
-                    // Kosongkan kolom peran user di record
-                    if ($peran === 'pemotong') {
-                        $record->pemotong = null;
-                    } elseif ($peran === 'penjahit') {
-                        $record->penjahit = null;
-                    } elseif ($peran === 'penyablon') {
-                        $record->penyablon = null;
+                    // Reset kolom user_id di pesanan_detail
+                    $peranColumn = match ($peran) {
+                        'pemotong' => 'pemotong',
+                        'penjahit' => 'penjahit',
+                        'penyablon' => 'penyablon',
+                        default => null,
+                    };
+
+                    if ($peranColumn) {
+                        $record->$peranColumn = null;
                     }
 
-                    // Ubah status ke peran terakhir yang masih ada, atau 'antrian'
-                    $statusBaru = 'antrian';
-
+                    // Hitung ulang status berdasarkan urutan pengerjaan yang masih ada
+                    $status = 'antrian';
                     if ($record->penyablon) {
-                        $statusBaru = 'disablon';
+                        $status = 'disablon';
                     } elseif ($record->penjahit) {
-                        $statusBaru = 'dijahit';
+                        $status = 'dijahit';
                     } elseif ($record->pemotong) {
-                        $statusBaru = 'dipotong';
+                        $status = 'dipotong';
                     }
 
-                    $record->status = $statusBaru;
+                    $record->status = $status;
                     $record->save();
-                });
-            }
-        }),
+                }
+            }),
     ])
             ->bulkActions([
                 // Hapus bulk actions jika tidak diperlukan
