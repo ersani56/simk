@@ -13,6 +13,7 @@ class PesananDetail extends Model
     protected $fillable = [
         'no_faktur',
         'kode_bjadi',
+        'satuan',
         'ukuran',
         'harga',
         'upah_potong',
@@ -24,6 +25,7 @@ class PesananDetail extends Model
         'penjahit',
         'penyablon',
         'keterangan',
+        'setelan',
     ];
 
     public function updateIfNull(string $column, $value)
