@@ -6,7 +6,8 @@
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 12px;
+            padding: 14px;
+            font-size: 14px;
         }
         /* Versi lebih kompak */
         .compact-summary td {
@@ -52,7 +53,7 @@
             font-weight: bold;
         }
         .logo {
-            height: 80px;
+            height:90px;
         }
         table {
             width: 100%;
@@ -63,6 +64,7 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            line-height: 1;
         }
         th {
             background-color: #f2f2f2;
@@ -120,36 +122,44 @@
         </thead>
         <tbody>
             @php
-                $total = 0;
-                $totalQty = 0;
-            @endphp
-            @foreach($pesanan->pesananDetails as $detail)
+            $total = 0;
+            $totalQty = 0;
+            $grouped = $pesanan->pesananDetails
+                ->filter(fn($detail) => $detail->setelan === null || $detail->satuan === 'stel')
+                ->groupBy(fn($d) => $d->bahanjadi->nama_bjadi ?? '-');
+        @endphp
+
+        @foreach($grouped as $namaBarang => $items)
+            @foreach($items as $index => $detail)
                 @php
                     $subtotal = $detail->jumlah * $detail->harga;
                     $total += $subtotal;
                     $totalQty += $detail->jumlah;
                 @endphp
                 <tr>
-                    <td>{{ $detail->bahanjadi->nama_bjadi ?? '-' }}</td>
+                    @if($index === 0)
+                    <td rowspan="{{ $items->count() }}" style="vertical-align: top;">{{ $namaBarang }}</td>
+                    @endif
                     <td class="sep">{{ $detail->ukuran }}</td>
                     <td>{{ $detail->jumlah }} pcs</td>
                     <td class="value">{{ number_format($detail->harga, 0, ',', '.') }}</td>
                     <td class="value">{{ number_format($subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
+        @endforeach
         </tbody>
     </table>
     <div class="summary-compact" style="float: right; text-align: right;">
         <div style="margin-bottom: 2px;">
-            <span class="label">Total&nbsp;&nbsp;&nbsp;:</span>
+            <span class="label">Total&nbsp;&nbsp;&nbsp;:</span>Rp.
             <span class="value">&nbsp;{{ number_format($total, 0, ',', '.') }}&nbsp;</span>
         </div>
         <div style="margin-bottom: 2px;">
-            <span class="label">Total bayar&nbsp;&nbsp;:</span>
+            <span class="label">Total bayar&nbsp;&nbsp;:</span>Rp.
             <span class="value">&nbsp;{{ number_format($pesanan->totalPembayaran(), 0, ',', '.') }}&nbsp;</span>
         </div>
         <div>
-            <span class="label">Sisa bon&nbsp;&nbsp;:</span>
+            <span class="label">Sisa bon&nbsp;&nbsp;:</span>Rp.
             <span class="value">{{ number_format($total - $pesanan->totalPembayaran(), 0, ',', '.') }}&nbsp;</span>
         </div>
     </div>
@@ -170,7 +180,7 @@
                     @foreach($pesanan->pembayaran as $p)
                         <tr>
                             <td>{{ $p->tanggal_bayar }}</td>
-                            <td>{{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
+                            <td>Rp. {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
                 </tbody>

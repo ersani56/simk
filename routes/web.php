@@ -29,3 +29,5 @@ Route::get('/nota-tagihan/{noFaktur}/cetak', [NotaTagihanPrintController::class,
 Route::get('/phpinfo', function () {
         phpinfo();
     });
+Route::get('/nota-tagihan/cetak-semua/{pelanggan}', [NotaTagihanController::class, 'cetakSemua'])->name('nota-tagihan.cetak-semua');
+Route::get('/nota-tagihan/cetak-bulk/{no_fakturs}', [NotaTagihanController::class, 'cetakBulk'])->name('nota-tagihan.cetak-bulk');

@@ -24,7 +24,14 @@ class PesananDetailResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('bahanjadi');
+        $query = parent::getEloquentQuery()->with('bahanjadi');
+
+        // Jika bukan admin, sembunyikan yang statusnya selesai
+        if (!auth()->user()->hasRole('admin')) {
+            $query->where('status', '!=', 'selesai');
+        }
+
+        return $query;
     }
 
     public static function form(Form $form): Form
@@ -50,13 +57,13 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('ukuran'),
                 Tables\Columns\TextColumn::make('jumlah')->numeric()->sortable(),
                 Tables\Columns\TextColumn::make('status')->badge()->color(fn($state) => match(strtolower(trim($state))) {
-                    'antrian' => 'gray',
-                    'dipotong', 'selesai dipotong' => 'blue',
-                    'dijahit', 'selesai dijahit' => 'indigo',
-                    'disablon', 'selesai disablon' => 'purple',
-                    'selesai' => 'success',
-                    default => 'yellow',
-                }),
+                        'antrian' => 'gray',
+                        'dipotong' => 'warning', // Gunakan 'warning' (orange built-in Filament)
+                        'dijahit' => 'info',    // Biru muda
+                        'disablon' => 'danger', // Merah
+                        'selesai' => 'success', // Hijau
+                        default => 'primary',   // Biru
+                    }),
                 Tables\Columns\TextColumn::make('pemotongUser.name')->label('Pemotong')->placeholder('-'),
                 Tables\Columns\TextColumn::make('penjahitUser.name')->label('Penjahit')->placeholder('-'),
                 Tables\Columns\TextColumn::make('penyablonUser.name')->label('Penyablon')->placeholder('-'),
@@ -70,6 +77,17 @@ class PesananDetailResource extends Resource
                     'disablon' => 'disablon',
                     'selesai' => 'selesai',
                 ]),
+                // Tambahkan filter untuk menyembunyikan yang selesai (hanya untuk admin)
+                Tables\Filters\TernaryFilter::make('hide_completed')
+                    ->label('Sembunyikan Selesai')
+                    ->placeholder('Tampilkan Semua')
+                    ->trueLabel('Sembunyikan Yang Selesai')
+                    ->falseLabel('Tampilkan Yang Selesai')
+                    ->queries(
+                        true: fn (Builder $query) => $query->where('status', '!=', 'selesai'),
+                        false: fn (Builder $query) => $query->where('status', 'selesai'),
+                    )
+                    ->visible(fn() => auth()->user()->hasRole('admin'))
             ])
             ->actions([
                 Tables\Actions\Action::make('update_status')
@@ -285,3 +303,4 @@ class PesananDetailResource extends Resource
         ];
     }
 }
+

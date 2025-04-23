@@ -11,7 +11,7 @@ class Pesanan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['no_faktur', 'kode_plg', 'tanggal'];
+    protected $fillable = ['no_faktur', 'kode_plg', 'tanggal','total_tagihan'];
 
     protected static function boot()
     {
@@ -58,12 +58,12 @@ class Pesanan extends Model
         return $this->hasMany(PesananDetail::class, 'no_faktur', 'no_faktur');
     }
 
-    public function getTotalTagihanAttribute()
-    {
-        return $this->pesananDetails->sum(function ($item) {
-            return $item->harga * $item->jumlah;
-        });
-    }
+    // public function getTotalTagihanAttribute()
+    // {
+    //     return $this->pesananDetails->sum(function ($item) {
+    //         return $item->harga * $item->jumlah;
+    //     });
+    // }
 
     public function getTotalBayarAttribute()
     {
@@ -74,6 +74,5 @@ class Pesanan extends Model
     {
         return $this->total_tagihan - $this->total_bayar;
     }
-
 
 }

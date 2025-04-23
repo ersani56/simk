@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\PesananResource\RelationManagers;
 
+use App\Models\Bahanjadi;
 use Filament\Tables\Table;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Resources\RelationManagers\RelationManager;
 
 class PesananDetailsRelationManager extends RelationManager
 {
@@ -15,6 +16,14 @@ class PesananDetailsRelationManager extends RelationManager
         return $table
             ->columns([
                 TextColumn::make('kode_bjadi')->label('Kode Barang')->sortable(),
+                TextColumn::make('bahanjadi.nama_bjadi')
+                ->label('Nama Produk'),
+                TextColumn::make('satuan'),
+                TextColumn::make('setelan')
+                ->formatStateUsing(function ($state) {
+                    return $state ? Bahanjadi::find($state)?->nama_bjadi : '-';
+                })
+                ->label('Setelan'),
                 TextColumn::make('ukuran')->label('Ukuran'),
                 TextColumn::make('harga')->label('Harga')->money('IDR'),
                 TextColumn::make('jumlah')->label('Jumlah'),

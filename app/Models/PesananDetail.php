@@ -13,6 +13,7 @@ class PesananDetail extends Model
     protected $fillable = [
         'no_faktur',
         'kode_bjadi',
+        'setelan',
         'satuan',
         'ukuran',
         'harga',
@@ -25,7 +26,6 @@ class PesananDetail extends Model
         'penjahit',
         'penyablon',
         'keterangan',
-        'setelan',
     ];
 
     public function updateIfNull(string $column, $value)
@@ -58,7 +58,7 @@ class PesananDetail extends Model
     {
         return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
     }
-
+    protected $touches = ['pesanan']; // Otomatis update timestamp pesanan saat detail berubah
 
 
 }
