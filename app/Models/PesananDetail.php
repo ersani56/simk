@@ -7,14 +7,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PesananDetail extends Model
 {
-    // use HasFactory;
-    protected $table ='pesanan_details';
+    protected $table = 'pesanan_details';
 
     protected $fillable = [
         'no_faktur',
         'kode_bjadi',
-        'setelan',
-        'satuan',
+        'setelan',       // Untuk grouping produk utama-pasangan
+        'satuan',        // 'pcs', 'stel', 'paket'
         'ukuran',
         'harga',
         'upah_potong',
@@ -22,10 +21,16 @@ class PesananDetail extends Model
         'upah_sablon',
         'jumlah',
         'status',
-        'pemotong',
-        'penjahit',
-        'penyablon',
-        'keterangan',
+        'pemotong',      // ID user pemotong
+        'penjahit',      // ID user penjahit
+        'penyablon',     // ID user penyablon
+        'ket',
+        'is_pasangan',   // Tambahkan ini untuk flag produk pasangan
+    ];
+
+    // Tambahkan casting untuk boolean
+    protected $casts = [
+        'is_pasangan' => 'boolean',
     ];
 
     public function updateIfNull(string $column, $value)
@@ -34,31 +39,44 @@ class PesananDetail extends Model
             $this->update([$column => $value]);
         }
     }
-    public function bahanjadi()
+
+    // Relasi dengan nama lebih konsisten (camelCase)
+    public function bahanJadi(): BelongsTo
     {
         return $this->belongsTo(Bahanjadi::class, 'kode_bjadi', 'kode_bjadi');
     }
 
-    public function pemotongUser()
+    public function pemotongUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'pemotong');
     }
 
-    public function penjahitUser()
+    public function penjahitUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'penjahit');
     }
 
-    public function penyablonUser()
+    public function penyablonUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'penyablon');
     }
 
-    public function pesanan()
+    public function pesanan(): BelongsTo
     {
         return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
     }
-    protected $touches = ['pesanan']; // Otomatis update timestamp pesanan saat detail berubah
 
+    protected $touches = ['pesanan'];
 
+    // Scope untuk produk utama
+    public function scopeMainItems($query)
+    {
+        return $query->where('is_pasangan', false);
+    }
+
+    // Scope untuk produk pasangan
+    public function scopePairItems($query)
+    {
+        return $query->where('is_pasangan', true);
+    }
 }

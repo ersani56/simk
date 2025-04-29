@@ -141,27 +141,35 @@
                     <td rowspan="{{ $items->count() }}" style="vertical-align: top;">{{ $namaBarang }}</td>
                     @endif
                     <td class="sep">{{ $detail->ukuran }}</td>
-                    <td>{{ $detail->jumlah }} pcs</td>
-                    <td class="value">{{ number_format($detail->harga, 0, ',', '.') }}</td>
-                    <td class="value">{{ number_format($subtotal, 0, ',', '.') }}</td>
+                    <td>{{ $detail->jumlah.' '.$detail->satuan }} </td>
+                    <td class="value">Rp. {{ number_format($detail->harga, 0, ',', '.') }}</td>
+                    <td class="value">Rp. {{ number_format($subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         @endforeach
         </tbody>
     </table>
-    <div class="summary-compact" style="float: right; text-align: right;">
-        <div style="margin-bottom: 2px;">
-            <span class="label">Total&nbsp;&nbsp;&nbsp;:</span>Rp.
-            <span class="value">&nbsp;{{ number_format($total, 0, ',', '.') }}&nbsp;</span>
-        </div>
-        <div style="margin-bottom: 2px;">
-            <span class="label">Total bayar&nbsp;&nbsp;:</span>Rp.
-            <span class="value">&nbsp;{{ number_format($pesanan->totalPembayaran(), 0, ',', '.') }}&nbsp;</span>
-        </div>
-        <div>
-            <span class="label">Sisa bon&nbsp;&nbsp;:</span>Rp.
-            <span class="value">{{ number_format($total - $pesanan->totalPembayaran(), 0, ',', '.') }}&nbsp;</span>
-        </div>
+    <div style="width: 100%; display: flex; justify-content: flex-end;">
+        <table class="summary-table" style="border-collapse: collapse; border: none; font-family: Arial, sans-serif; margin-top: 10px;">
+            <tr>
+                <td style="text-align: right; padding: 2px 5px; border: none;"><span class="label">Total:</span></td>
+                <td style="text-align: right; padding: 2px 5px; border: none; white-space: nowrap; width: 100px;">
+                    Rp.&nbsp;<span class="value">{{ number_format($total, 0, ',', '.') }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right; padding: 2px 5px; border: none;"><span class="label">Total bayar:</span></td>
+                <td style="text-align: right; padding: 2px 5px; border: none; white-space: nowrap;">
+                    Rp.&nbsp;<span class="value">{{ number_format($pesanan->totalPembayaran(), 0, ',', '.') }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right; padding: 2px 5px; border: none;"><span class="label">Sisa bon:</span></td>
+                <td style="text-align: right; padding: 2px 5px; border: none; white-space: nowrap;">
+                    Rp.&nbsp;<span class="value">{{ number_format($total - $pesanan->totalPembayaran(), 0, ',', '.') }}</span>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="clearfix"></div>

@@ -2,16 +2,18 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Tables;
+use Filament\Forms\Form;
+use Filament\Tables\Table;
+use App\Models\GajiKaryawan;
+use App\Models\PesananDetail;
+use Filament\Resources\Resource;
+use Illuminate\Support\Facades\DB;
+use Filament\Tables\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Tables;
-use Filament\Tables\Table;
+use Filament\Tables\Actions\ActionGroup;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\PesananDetail;
-use App\Models\GajiKaryawan;
-use Illuminate\Support\Facades\DB;
-use Filament\Resources\Resource;
 use App\Filament\Resources\PesananDetailResource\Pages;
 
 class PesananDetailResource extends Resource
@@ -253,46 +255,70 @@ class PesananDetailResource extends Resource
                         }
                     });
                 }),
-                Tables\Actions\Action::make('reset_status')
-                    ->label('')
-                    ->icon('heroicon-m-arrow-path')
-                    ->tooltip('Reset Status')
-                    ->requiresConfirmation()
-                    ->visible(fn () => auth()->user()?->hasRole('admin'))
-                    ->action(function (PesananDetail $record) {
-                        $lastGaji = GajiKaryawan::where('pesanan_detail_id', $record->id)->latest()->first();
+                ActionGroup::make([
+                    Action::make('reset_pemotong')
+                        ->label('Reset Pemotong')
+                        ->icon('heroicon-m-arrow-path')
+                        ->requiresConfirmation()
+                        ->visible(fn () => auth()->user()?->hasRole('admin'))
+                        ->action(function (PesananDetail $record) {
+                            if ($record->pemotong) {
+                                GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->where('peran', 'pemotong')
+                                    ->where('karyawan_id', $record->pemotong)
+                                    ->delete();
 
-                        if ($lastGaji) {
-                            $peran = $lastGaji->peran;
-                            $userId = $lastGaji->karyawan_id;
+                                $record->pemotong = null;
 
-                            $lastGaji->delete();
-
-                            $column = match ($peran) {
-                                'pemotong' => 'pemotong',
-                                'penjahit' => 'penjahit',
-                                'penyablon' => 'penyablon',
-                                default => null,
-                            };
-
-                            if ($column) {
-                                $record->$column = null;
+                                // Update status berdasarkan peran lain
+                                $record->status = $record->penyablon ? 'disablon' :
+                                                ($record->penjahit ? 'dijahit' : 'antrian');
+                                $record->save();
                             }
+                        }),
 
-                            // Cek sisa pekerjaan untuk menentukan status
-                            $status = 'antrian';
+                    Action::make('reset_penjahit')
+                        ->label('Reset Penjahit')
+                        ->icon('heroicon-m-arrow-path')
+                        ->requiresConfirmation()
+                        ->visible(fn () => auth()->user()?->hasRole('admin'))
+                        ->action(function (PesananDetail $record) {
+                            if ($record->penjahit) {
+                                GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->where('peran', 'penjahit')
+                                    ->where('karyawan_id', $record->penjahit)
+                                    ->delete();
+
+                                $record->penjahit = null;
+
+                                $record->status = $record->penyablon ? 'disablon' :
+                                                ($record->pemotong ? 'dipotong' : 'antrian');
+                                $record->save();
+                            }
+                        }),
+
+                    Action::make('reset_penyablon')
+                        ->label('Reset Penyablon')
+                        ->icon('heroicon-m-arrow-path')
+                        ->requiresConfirmation()
+                        ->visible(fn () => auth()->user()?->hasRole('admin'))
+                        ->action(function (PesananDetail $record) {
                             if ($record->penyablon) {
-                                $status = 'disablon';
-                            } elseif ($record->penjahit) {
-                                $status = 'dijahit';
-                            } elseif ($record->pemotong) {
-                                $status = 'dipotong';
-                            }
+                                GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->where('peran', 'penyablon')
+                                    ->where('karyawan_id', $record->penyablon)
+                                    ->delete();
 
-                            $record->status = $status;
-                            $record->save();
-                        }
-                    }),
+                                $record->penyablon = null;
+
+                                $record->status = $record->penjahit ? 'dijahit' :
+                                                ($record->pemotong ? 'dipotong' : 'antrian');
+                                $record->save();
+                            }
+                        }),
+                ])
+                ->icon('heroicon-m-arrow-path')
+                ->tooltip('Reset Status Per Peran')
             ]);
     }
 

@@ -24,7 +24,7 @@ class PesananResource extends Resource
     protected static ?string $model = Pesanan::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup= 'Transaksi';
+    protected static ?string $navigationGroup = 'Transaksi';
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -34,12 +34,27 @@ class PesananResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->selectRaw('pesanans.*,
+            ->select([
+                'pesanans.id',
+                'pesanans.no_faktur',
+                'pesanans.kode_plg',
+                'pesanans.tanggal',
+                'pesanans.created_at',
+                'pesanans.updated_at'
+            ])
+            ->selectRaw('
                 (SELECT COALESCE(SUM(jumlah_bayar), 0)
                 FROM pembayarans
-                WHERE pembayarans.no_faktur COLLATE utf8mb4_unicode_ci = pesanans.no_faktur COLLATE utf8mb4_unicode_ci
-                ) as total_bayar')
-            ->groupBy('pesanans.id');
+                WHERE pembayarans.no_faktur = pesanans.no_faktur
+            ) as total_bayar')
+            ->groupBy([
+                'pesanans.id',
+                'pesanans.no_faktur',
+                'pesanans.kode_plg',
+                'pesanans.tanggal',
+                'pesanans.created_at',
+                'pesanans.updated_at'
+            ]);
     }
 
     public static function form(Form $form): Form
@@ -82,19 +97,19 @@ class PesananResource extends Resource
                                     $set('upah_jahit', $bahanjadi->upah_jahit);
                                     $set('upah_sablon', $bahanjadi->upah);
                                 }
-                            }),
+                            })
+                            ->disabled(fn ($record) => $record?->is_pasangan),
 
                         Select::make('satuan')
                             ->label('Satuan')
                             ->options([
                                 'pcs' => 'PCS',
                                 'stel' => 'Stel',
+                                'paket' => 'Paket',
                             ])
                             ->required()
                             ->live()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                $set('setelan', null);
-                            }),
+                            ->disabled(fn ($record) => $record?->is_pasangan),
 
                         // Form untuk produk utama
                         Section::make()
@@ -104,132 +119,106 @@ class PesananResource extends Resource
                                     ->numeric()
                                     ->required()
                                     ->prefix('Rp.'),
-
                                 TextInput::make('upah_potong')
                                     ->label('Upah Potong')
                                     ->numeric()
                                     ->required()
                                     ->prefix('Rp.'),
-
                                 TextInput::make('upah_jahit')
                                     ->label('Upah Jahit')
                                     ->numeric()
                                     ->required()
                                     ->prefix('Rp.'),
-
                                 TextInput::make('upah_sablon')
                                     ->label('Upah Sablon')
                                     ->numeric()
                                     ->required()
                                     ->prefix('Rp.'),
                             ])
-                            ->columns(2),
+                            ->columns(2)
+                            ->hidden(fn ($record) => $record?->is_pasangan),
 
-                        // Form tambahan untuk setelan (hanya muncul jika satuan = stel)
-                        Section::make('Detail Setelan')
-                            ->schema([
-                                Select::make('setelan')
-                                    ->label('Pilih Produk Pasangan')
-                                    ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
-                                    ->searchable()
-                                    ->visible(fn ($get) => $get('satuan') === 'stel')
-                                    ->required(fn ($get) => $get('satuan') === 'stel')
-                                    ->live()
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        $bahanjadi = Bahanjadi::where('kode_bjadi', $state)->first();
-                                        if ($bahanjadi) {
-                                            $set('harga_pasangan', 0); // ← harga pasangan selalu nol
-                                            $set('upah_potong_pasangan', $bahanjadi->upah_potong);
-                                            $set('upah_jahit_pasangan', $bahanjadi->upah_jahit);
-                                            $set('upah_sablon_pasangan', $bahanjadi->upah);
-                                        }
-                                    }),
-                                    TextInput::make('harga_pasangan')
-                                            ->default(0)
-                                            ->visible(fn ($get) => $get('satuan') === 'stel' && $get('setelan'))
-                                            ->disabled(),
+                        // Form tambahan untuk setelan/paket
+                        Section::make('Detail Setelan/Paket')
+                        ->schema([
+                            Repeater::make('items_pasangan')
+                                ->label('Produk Pasangan')
+                                ->schema([
+                                    Select::make('kode_bjadi_pasangan')
+                                        ->label('Pilih Produk Pasangan')
+                                        ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
+                                        ->searchable()
+                                        ->required()
+                                        ->live()
+                                        ->afterStateUpdated(function ($state, callable $set) {
+                                            $bahanjadi = Bahanjadi::where('kode_bjadi', $state)->first();
+                                            if ($bahanjadi) {
+                                                $set('upah_potong_pasangan', $bahanjadi->upah_potong);
+                                                $set('upah_jahit_pasangan', $bahanjadi->upah_jahit);
+                                                $set('upah_sablon_pasangan', $bahanjadi->upah);
+                                            }
+                                        }),
 
                                     TextInput::make('upah_potong_pasangan')
-                                            ->label('Upah potong pasangan')
-                                            ->numeric()
-                                            ->statePath('upah_potong_pasangan')
-                                            ->dehydrated()
-                                            ->prefix('Rp.')
-                                            ->visible(fn ($get) => $get('satuan') === 'stel' && $get('setelan')),
-                                            TextInput::make('upah_jahit_pasangan')
-                                            ->label('Upah jahit pasangan')
-                                            ->numeric()
-                                            ->prefix('Rp.')
-                                            ->visible(fn ($get) => $get('satuan') === 'stel' && $get('setelan')),
+                                        ->label('Upah Potong Pasangan')
+                                        ->numeric()
+                                        ->prefix('Rp.'),
+
+                                    TextInput::make('upah_jahit_pasangan')
+                                        ->label('Upah Jahit Pasangan')
+                                        ->numeric()
+                                        ->prefix('Rp.'),
+
                                     TextInput::make('upah_sablon_pasangan')
-                                            ->label('Upah sablon pasangan')
-                                            ->numeric()
-                                            ->statePath('upah_potong_pasangan')
-                                            ->dehydrated()
-                                            ->prefix('Rp.')
-                                            ->visible(fn ($get) => $get('satuan') === 'stel' && $get('setelan')),
-                            ])
-                            ->visible(fn ($get) => $get('satuan') === 'stel')
-                            ->collapsible(),
-                        Select::make('ukuran')->options([
-                            'S'=>'S',
-                            'M'=>'M',
-                            'L'=>'L',
-                            'XL'=>'XL',
-                            'XXL'=>'XXL',
-                            'XXXL'=>'XXXL',
-                            'Jumbo'=>'Jumbo',
-                            'S Pendek'=>'S Pendek',
-                            'S Panjang'=>'S Panjang',
-                            'S Laki-laki'=>'S Laki-laki',
-                            'S Perempuan'=>'S Perempuan',
-                            'M Pendek'=>'M Pendek',
-                            'M Panjang'=>'M Panjang',
-                            'M Laki-laki'=>'M Laki-laki',
-                            'M Perempuan'=>'M Peremuan',
-                            'L Pendek'=>'L Pendek',
-                            'L Panjang'=>'L Panjang',
-                            'L Laki-laki'=>'L Laki-laki',
-                            'L Perempuan'=>'L Perempuan',
-                            'XL Pendek'=>'XL Pendek',
-                            'XL Panjang'=>'XL Panjang',
-                            'XL Laki-laki'=>'XL Laki-laki',
-                            'XL Perempuan'=>'XL Perempuan',
-                            'XXL Pendek'=>'XXL Pendek',
-                            'XXL Panjang'=>'XXL Panjang',
-                            'XXL Laki-laki'=>'XXL Laki-laki',
-                            'XXL Perempuan'=>'XXL Perempuan',
-                            'XXXL Pendek'=>'XXXL Pendek',
-                            'XXXL Panjang'=>'XXXL Panjang',
-                            'XXXL Laki-laki'=>'XXXL Laki-laki',
-                            'XXXL Perempuan'=>'XXXL Perempuan',
-                            'Jumbo Pendek'=>'Jumbo Pendek',
-                            'Jumbo Panjang'=>'Jumbo Panjang',
-                            'Jumbo Laki-laki'=>'Jumbo Laki-laki',
-                            'Jumbo Perempuan'=>'Jumbo Perempuan',
-                    ]),
-                    TextInput::make('jumlah')
-                        ->label('Jumlah')
-                        ->numeric()
-                        ->required(),
-                    Select::make('status')
-                        ->label('Status')
-                        ->default('antrian')
-                        ->options([
-                            'antrian' => 'antrian',
-                            'dipotong' => 'dipotong',
-                            'dijahit' => 'dijahit',
-                            'disablon' => 'disablon',
-                            'selesai' => 'selesai',
+                                        ->label('Upah Sablon Pasangan')
+                                        ->numeric()
+                                        ->prefix('Rp.'),
+                                ])
+                                ->columns(1)
                         ])
-                        ->required(),
-                    TextInput::make('ket'),
-                ])
-                ->statePath('pesananDetails')
-                ->createItemButtonLabel('Tambah Item')
-                ->minItems(1)
-                ->columns(1)
-        ]);
+                        ->visible(fn ($get) => in_array($get('satuan'), ['stel', 'paket']))
+                        ->collapsible(),
+                        Select::make('ukuran')
+                            ->options([
+                                'S' => 'S',
+                                'M' => 'M',
+                                'L' => 'L',
+                                'XL' => 'XL',
+                                'XXL' => 'XXL',
+                                'XXXL' => 'XXXL',
+                                'Jumbo' => 'Jumbo',
+                            ])
+                            ->required(),
+
+                        TextInput::make('jumlah')
+                            ->label('Jumlah')
+                            ->numeric()
+                            ->required(),
+
+                        Select::make('status')
+                            ->label('Status')
+                            ->default('antrian')
+                            ->options([
+                                'antrian' => 'Antrian',
+                                'dipotong' => 'Dipotong',
+                                'dijahit' => 'Dijahit',
+                                'disablon' => 'Disablon',
+                                'selesai' => 'Selesai',
+                            ])
+                            ->required(),
+
+                        TextInput::make('ket')
+                            ->label('Keterangan'),
+                    ])
+                    ->createItemButtonLabel('Tambah Item')
+                    ->minItems(1)
+                    ->columns(1)
+                    ->reorderable(false)
+                    ->mutateRelationshipDataBeforeCreateUsing(function (array $data): array {
+                        // Tambahkan flag is_pasangan = false untuk item utama
+                        return array_merge($data, ['is_pasangan' => false]);
+                    })
+            ]);
     }
 
     public static function table(Table $table): Table
@@ -237,34 +226,32 @@ class PesananResource extends Resource
         return $table
             ->columns([
                 TextColumn::make('no_faktur')
-                ->label('No Faktur')
-                ->searchable(),
+                    ->label('No Faktur')
+                    ->searchable(),
                 TextColumn::make('pelanggan.nama_plg')
-                ->label('Nama Pelanggan')
-                ->searchable(),
+                    ->label('Nama Pelanggan')
+                    ->searchable(),
                 TextColumn::make('tanggal')->label('Tanggal')->date(),
                 TextColumn::make('pesanan_details_count')->label('Jumlah Item')
-                ->sortable()
-                ->alignCenter()
-                ->formatStateUsing(function ($state) {
-                    return $state . ' item';// Contoh: "5 item"
-                }),
+                    ->sortable()
+                    ->alignCenter()
+                    ->formatStateUsing(function ($state) {
+                        return $state . ' item'; // Contoh: "5 item"
+                    }),
             ])
-            ->filters([
-                //
-            ])
+            ->filters([ ])
             ->defaultSort('no_faktur', 'desc')
             ->modifyQueryUsing(function ($query) {
                 return $query->with('pelanggan')->withCount('pesananDetails');
             })
-                ->actions([
+            ->actions([
                 Tables\Actions\ViewAction::make()->label('')->tooltip('detail'),
                 Tables\Actions\DeleteAction::make()->label('')->tooltip('hapus'),
                 Tables\Actions\EditAction::make()->label('')->tooltip('ubah'),
-                ])
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
     }
