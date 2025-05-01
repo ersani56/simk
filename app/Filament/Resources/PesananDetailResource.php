@@ -44,6 +44,7 @@ class PesananDetailResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(PesananDetail::with('gajiKaryawans'))
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')->searchable()->label('No. Faktur'),
                 Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')->label('Nama Produk')->searchable()->sortable(),
@@ -58,17 +59,38 @@ class PesananDetailResource extends Resource
                     ->html(),
                 Tables\Columns\TextColumn::make('ukuran'),
                 Tables\Columns\TextColumn::make('jumlah')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('status')->badge()->color(fn($state) => match(strtolower(trim($state))) {
-                        'antrian' => 'gray',
-                        'dipotong' => 'warning', // Gunakan 'warning' (orange built-in Filament)
-                        'dijahit' => 'info',    // Biru muda
-                        'disablon' => 'danger', // Merah
+                Tables\Columns\TextColumn::make('status')
+                ->badge()
+                ->color(fn($state) => match(strtolower(trim($state))) {
+                        'antrian' => 'info',
+                        'proses' => 'warning', // Gunakan 'warning' (orange built-in Filament)
                         'selesai' => 'success', // Hijau
                         default => 'primary',   // Biru
-                    }),
-                Tables\Columns\TextColumn::make('pemotongUser.name')->label('Pemotong')->placeholder('-'),
-                Tables\Columns\TextColumn::make('penjahitUser.name')->label('Penjahit')->placeholder('-'),
-                Tables\Columns\TextColumn::make('penyablonUser.name')->label('Penyablon')->placeholder('-'),
+                })
+                ->label('Status')
+                ->formatStateUsing(fn ($state) => ucfirst($state)),
+
+                Tables\Columns\TextColumn::make('hasil_potong')
+                ->label('dipotong')
+                ->getStateUsing(function ($record) {
+                    return $record->gajiKaryawans?->where('peran', 'pemotong')->sum('jumlah') ?? 0;
+                }),
+
+
+                    Tables\Columns\TextColumn::make('hasil_jahit')
+                    ->label('dijahit')
+                    ->getStateUsing(function ($record) {
+                        return $record->gajiKaryawans->where('peran', 'penjahit')->sum('jumlah');
+                    })
+                    ->alignCenter(),
+
+                    Tables\Columns\TextColumn::make('hasil_sablon')
+                    ->label('disablon')
+                    ->getStateUsing(function ($record) {
+                        return $record->gajiKaryawans->where('peran', 'penyablon')->sum('jumlah');
+                    })
+                    ->alignCenter(),
+
                 Tables\Columns\TextColumn::make('ket')->label('Keterangan')->wrap(),
             ])
             ->filters([
@@ -222,7 +244,6 @@ class PesananDetailResource extends Resource
                     DB::transaction(function () use ($record, $status, $userId, $peran, $upah, $jumlah) {
                         // Update status pesanan
                         $record->update([
-                            'status' => $status,
                             $peran => $userId
                         ]);
 

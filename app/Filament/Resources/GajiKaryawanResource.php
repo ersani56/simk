@@ -98,7 +98,9 @@ class GajiKaryawanResource extends Resource
         ->default(now()),
             ])
             ->actions([
-                //
+                Tables\Actions\EditAction::make()
+                ->label('')
+                ->tooltip('Ubah'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

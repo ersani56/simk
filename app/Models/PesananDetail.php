@@ -73,10 +73,39 @@ class PesananDetail extends Model
     {
         return $query->where('is_pasangan', false);
     }
+    public function gajiKaryawans()
+    {
+        return $this->hasMany(GajiKaryawan::class, 'pesanan_detail_id');
+    }
+
 
     // Scope untuk produk pasangan
     public function scopePairItems($query)
     {
         return $query->where('is_pasangan', true);
     }
+    public function getStatusAttribute()
+    {
+        $id = $this->id;
+        $jumlah = $this->jumlah;
+
+        $dipotong = \App\Models\GajiKaryawan::where('pesanan_detail_id', $id)->where('peran', 'pemotong')->sum('jumlah');
+        $dijahit = \App\Models\GajiKaryawan::where('pesanan_detail_id', $id)->where('peran', 'penjahit')->sum('jumlah');
+        $disablon = \App\Models\GajiKaryawan::where('pesanan_detail_id', $id)->where('peran', 'penyablon')->sum('jumlah');
+
+        // Kondisi selesai jika ketiganya sama dengan jumlah
+        if ($dipotong >= $jumlah && $dijahit >= $jumlah && $disablon >= $jumlah) {
+            return 'selesai';
+        }
+
+        // Kondisi antrian jika semuanya masih nol
+        if ($dipotong == 0 && $dijahit == 0 && $disablon == 0) {
+            return 'antrian';
+        }
+
+        // Selain itu berarti sedang proses
+        return 'proses';
+    }
+
+
 }
