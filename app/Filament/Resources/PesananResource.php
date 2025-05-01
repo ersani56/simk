@@ -233,8 +233,7 @@ class PesananResource extends Resource
                                 'dijahit' => 'Dijahit',
                                 'disablon' => 'Disablon',
                                 'selesai' => 'Selesai',
-                            ])
-                            ->required(),
+                            ]),
 
                         TextInput::make('ket')
                             ->label('Keterangan'),
