@@ -215,6 +215,12 @@ class PesananDetailResource extends Resource
                     $user = auth()->user();
                     $userId = $user->id;
 
+                    // Admin paksa selesai tanpa validasi
+                    if ($status === 'selesai' && $user->hasRole('admin')) {
+                        $record->update(['status' => 'selesai']);
+                        return;
+                    }
+
                     // Validasi jumlah
                     if ($jumlah <= 0) {
                         throw new \Exception('Jumlah harus lebih dari 0');
@@ -240,12 +246,18 @@ class PesananDetailResource extends Resource
                             throw new \Exception('Total jumlah untuk peran ini tidak boleh melebihi jumlah pesanan. Sisa yang bisa dikerjakan: ' . ($record->jumlah - $totalSudah));
                         }
                     }
+                        // Jika admin memilih 'selesai', tandai override status
+                        DB::transaction(function () use ($record, $status, $userId, $peran, $upah, $jumlah, $user) {
+                            // Update status pesanan
+                            $updateData = [
+                                'status' => $status,
+                            ];
 
-                    DB::transaction(function () use ($record, $status, $userId, $peran, $upah, $jumlah) {
-                        // Update status pesanan
-                        $record->update([
-                            $peran => $userId
-                        ]);
+                            if ($peran) {
+                                $updateData[$peran] = $userId;
+                            }
+
+                            $record->update($updateData);
 
                         if ($peran) {
                             // Cari record gaji yang sudah ada untuk user ini pada peran ini
