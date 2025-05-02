@@ -18,6 +18,16 @@ class GajiKaryawan extends Model
     {
         return $this->belongsTo(PesananDetail::class, 'pesanan_detail_id');
     }
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            $model->pesananDetail->updateStatus();
+        });
+
+        static::deleted(function ($model) {
+            $model->pesananDetail->updateStatus();
+        });
+    }
 
 }
 

@@ -62,10 +62,10 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                 ->badge()
                 ->color(fn($state) => match(strtolower(trim($state))) {
-                        'antrian' => 'info',
-                        'proses' => 'warning', // Gunakan 'warning' (orange built-in Filament)
-                        'selesai' => 'success', // Hijau
-                        default => 'primary',   // Biru
+                    'antrian' => 'info',
+                    'proses' => 'warning',
+                    'selesai' => 'success',
+                    default => 'primary',
                 })
                 ->label('Status')
                 ->formatStateUsing(fn ($state) => ucfirst($state)),
@@ -94,14 +94,20 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('ket')->label('Keterangan')->wrap(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')->options([
-                    'antrian' => 'antrian',
-                    'dipotong' => 'dipotong',
-                    'dijahit' => 'dijahit',
-                    'disablon' => 'disablon',
-                    'selesai' => 'selesai',
-                ]),
-                // Tambahkan filter untuk menyembunyikan yang selesai (hanya untuk admin)
+                Tables\Filters\SelectFilter::make('status')
+                ->label('Status Produksi')
+                ->options([
+                    '' => 'Semua',
+                    'antrian' => 'Antrian',
+                    'proses' => 'Proses',
+                    'selesai' => 'Selesai',
+                ])
+                ->default('')
+                ->query(function (Builder $query, array $data) {
+                    if (!empty($data['value'])) {
+                        $query->where('status', $data['value']);
+                    }
+                }),
                 Tables\Filters\TernaryFilter::make('hide_completed')
                     ->label('Sembunyikan Selesai')
                     ->placeholder('Tampilkan Semua')
@@ -123,7 +129,7 @@ class PesananDetailResource extends Resource
                     $userId = $user->id;
                     $isAdmin = $user->hasRole('admin');
                     $availableStatus = $isAdmin
-                        ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai']
+                        ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai','proses' => 'proses']
                         : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
 
                     return [
@@ -255,6 +261,20 @@ class PesananDetailResource extends Resource
 
                             if ($peran) {
                                 $updateData[$peran] = $userId;
+                            }
+
+                            // Cek jika semua pekerjaan telah tercapai
+                            $totalPekerjaan = $record->jumlah;
+                            $pekerjaanSelesai = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                ->selectRaw('SUM(jumlah) as total')
+                                ->first()->total ?? 0;
+
+                            if ($pekerjaanSelesai >= $totalPekerjaan) {
+                                $updateData['status'] = 'selesai';
+                            } elseif ($pekerjaanSelesai > 0 && $pekerjaanSelesai < $totalPekerjaan) {
+                                $updateData['status'] = 'proses';
+                            } else {
+                                $updateData['status'] = 'antrian';
                             }
 
                             $record->update($updateData);

@@ -13,7 +13,7 @@ class EditUser extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make(),
+            Actions\DeleteAction::make(),
         ];
     }
 }

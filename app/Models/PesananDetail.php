@@ -32,7 +32,53 @@ class PesananDetail extends Model
     protected $casts = [
         'is_pasangan' => 'boolean',
     ];
+    protected static function booted()
+    {
+        static::saved(function ($model) {
+            $model->updateStatus();
+        });
 
+        static::deleted(function ($model) {
+            $model->updateStatusAfterDelete();
+        });
+    }
+
+    public function updateStatus()
+    {
+        $totalPekerjaan = $this->jumlah;
+
+        // Cek jika semua peran terpenuhi
+        $peran = ['pemotong', 'penjahit', 'penyablon'];
+        $peranTerpenuhi = true;
+        foreach ($peran as $p) {
+            $jumlahPeran = GajiKaryawan::where('pesanan_detail_id', $this->id)
+                ->where('peran', $p)
+                ->sum('jumlah');
+            if ($jumlahPeran < $totalPekerjaan) {
+                $peranTerpenuhi = false;
+                break;
+            }
+        }
+
+        if ($peranTerpenuhi) {
+            $this->status = 'selesai';
+        } elseif (GajiKaryawan::where('pesanan_detail_id', $this->id)->exists()) {
+            $this->status = 'proses';
+        } else {
+            $this->status = 'antrian';
+        }
+
+        $this->saveQuietly();
+    }
+
+    public function updateStatusAfterDelete()
+    {
+        $gajiKaryawan = GajiKaryawan::where('pesanan_detail_id', $this->id)->first();
+        if (!$gajiKaryawan) {
+            $this->status = 'antrian';
+            $this->saveQuietly();
+        }
+    }
     public function updateIfNull(string $column, $value)
     {
         if (is_null($this->$column)) {
