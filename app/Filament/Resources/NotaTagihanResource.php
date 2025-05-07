@@ -20,6 +20,10 @@ class NotaTagihanResource extends Resource
     protected static ?string $navigationLabel = 'Nota Tagihan';
     protected static ?string $pluralModelLabel = 'Nota Tagihan';
     protected static ?string $navigationGroup = 'Laporan';
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
 
     public static function getEloquentQuery(): Builder
     {
