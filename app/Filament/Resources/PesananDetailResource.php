@@ -44,7 +44,7 @@ class PesananDetailResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(PesananDetail::with('gajiKaryawans'))
+            //->query(PesananDetail::with('gajiKaryawans'))
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')->searchable()->label('No. Faktur'),
                 Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')->label('Nama Produk')->searchable()->sortable(),
@@ -221,11 +221,11 @@ class PesananDetailResource extends Resource
                     $user = auth()->user();
                     $userId = $user->id;
 
-                    // Admin paksa selesai tanpa validasi
-                    if ($status === 'selesai' && $user->hasRole('admin')) {
-                        $record->update(['status' => 'selesai']);
-                        return;
-                    }
+                    // // Admin paksa selesai tanpa validasi
+                    // if ($status === 'selesai' && $user->hasRole('admin')) {
+                    //     $record->update(['status' => 'selesai']);
+                    //     return;
+                    // }
 
                     // Validasi jumlah
                     if ($jumlah <= 0) {
