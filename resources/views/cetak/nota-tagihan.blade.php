@@ -1,3 +1,5 @@
+// View
+
 <h2>Nota Tagihan</h2>
 <p>Nama Pelanggan: {{ $pesanan->pelanggan->nama_plg }}</p>
 <p>No Faktur: {{ $pesanan->no_faktur }}</p>
@@ -25,5 +27,26 @@
 </table>
 
 <p><strong>Total Tagihan:</strong> @currency($total)</p>
+
+<h2>Riwayat Pembayaran</h2>
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>No Faktur</th>
+            <th>Tanggal Bayar</th>
+            <th>Jumlah Bayar</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($riwayatPembayaran as $pembayaran)
+        <tr>
+            <td>{{ $pembayaran->no_faktur }}</td>
+            <td>{{ $pembayaran->tanggal_bayar }}</td>
+            <td>@currency($pembayaran->jumlah_bayar)</td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
 <p><strong>Total Pembayaran:</strong> @currency($totalBayar)</p>
 <p><strong>Sisa Tagihan:</strong> @currency($sisa)</p>

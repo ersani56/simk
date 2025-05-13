@@ -92,6 +92,13 @@ class NotaTagihanResource extends Resource
                     ->searchable()
                     ->preload(),
             ])
+            ->headerActions([
+            Action::make('cetak_seluruh_tagihan')
+                ->label('Cetak Seluruh Tagihan')
+                ->url(fn () => route('nota-tagihan.cetak', request()->query()))
+                ->openUrlInNewTab()
+                ->icon('heroicon-o-printer'),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Action::make('cetak_pdf')

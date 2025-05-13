@@ -49,6 +49,7 @@ class BahanjadiResource extends Resource
                         'Trening'=>'Trening',
                         'Batik'=>'Batik',
                         'Celana'=>'Celana',
+                        'Rok' => 'Rok',
                         'Lainnya'=>'Lainnya',
                     ])
                     ->label('Kategori')

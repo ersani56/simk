@@ -40,8 +40,8 @@ class PelangganResource extends Resource
                 ->required(),
                 TextInput::make('alamat')
                 ->required(),
-                TextInput::make('telepon'),
-
+                TextInput::make('telepon')
+                ->nullable(),
             ])
             ->columns(1),
         ]);

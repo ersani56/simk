@@ -22,7 +22,12 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-
+            ->navigationGroups([
+                'Produksi', // Grup yang ingin muncul pertama
+                'Transaksi', // Grup berikutnya
+                'Admin',
+                'Laporan',
+            ])
             //->sidebarWidth('w-80')
             ->default()
             ->id('admin')

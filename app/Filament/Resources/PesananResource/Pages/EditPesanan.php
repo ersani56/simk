@@ -39,7 +39,7 @@ class EditPesanan extends EditRecord
                 continue;
             }
 
-            $groupId = $detail['setelan'] ?? Str::uuid();
+            $groupId = $detail['setelan'] ?? Str::random(8);
 
             // Update produk utama dengan group ID
             $record->pesananDetails()
@@ -50,15 +50,14 @@ class EditPesanan extends EditRecord
             foreach ($detail['items_pasangan'] as $pasangan) {
                 $record->pesananDetails()->create([
                     'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
-                    'satuan' => 'pcs',
+                    'satuan' => 'pasangan',
                     'harga' => 0,
                     'upah_potong' => $pasangan['upah_potong_pasangan'],
                     'upah_jahit' => $pasangan['upah_jahit_pasangan'],
                     'upah_sablon' => $pasangan['upah_sablon_pasangan'],
                     'ukuran' => $detail['ukuran'],
                     'jumlah' => $detail['jumlah'],
-                    'status' => $detail['status'],
-                    'ket' => 'Pasangan dari ' . $detail['kode_bjadi'],
+                    'ket' => $detail['ket'],
                     'setelan' => $groupId,
                     'is_pasangan' => true,
                 ]);

@@ -2,7 +2,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pesanan;
+use App\Models\Pembayaran;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 
 class NotaTagihanPrintController extends Controller
 {
@@ -12,8 +14,20 @@ class NotaTagihanPrintController extends Controller
 
         $details = $pesanan->pesananDetails;
         $total = $details->sum(fn ($item) => $item->jumlah * $item->harga);
-        $totalBayar = $pesanan->totalPembayaran();
-        $sisa = $total - $totalBayar;
+
+        // Total bayar pelanggan pada tahun berjalan
+        $tahun = Carbon::parse($pesanan->tanggal)->year;
+        $totalBayar = Pembayaran::whereHas('pesanan', function ($query) use ($pesanan) {
+            $query->where('kode_plg', $pesanan->pelanggan_id);
+        })->whereYear('tanggal_bayar', $tahun)->sum('jumlah_bayar');
+
+        // Total tagihan pelanggan pada tahun berjalan
+        $totalTagihan = Pesanan::where('kode_plg', $pesanan->pelanggan_id)
+            ->whereYear('tanggal', $tahun)
+            ->sum('total');
+
+        // Sisa tagihan
+        $sisa = $totalTagihan - $totalBayar;
 
         return view('cetak.nota-tagihan', compact('pesanan', 'details', 'total', 'totalBayar', 'sisa'));
     }
@@ -25,8 +39,24 @@ class NotaTagihanPrintController extends Controller
             ->firstOrFail();
 
         $total = $pesanan->pesananDetails->sum(fn ($item) => $item->jumlah * $item->harga);
-        $totalBayar = $pesanan->totalPembayaran();
-        $sisa = $total - $totalBayar;
+
+        // Total bayar pelanggan pada tahun berjalan
+        $tahun = Carbon::parse($pesanan->tanggal)->year;
+        $totalBayar = Pembayaran::whereHas('pesanan', function ($query) use ($pesanan) {
+            $query->where('kode_plg', $pesanan->pelanggan_id);
+        })->whereYear('tanggal_bayar', $tahun)->sum('jumlah_bayar');
+
+        // Total tagihan pelanggan pada tahun berjalan
+        $totalTagihan = Pesanan::where('kode_plg', $pesanan->pelanggan_id)
+            ->whereYear('tanggal', $tahun)
+            ->with('pesananDetails')
+            ->get()
+            ->sum(function ($item) {
+                return $item->pesananDetails->sum(fn ($detail) => $detail->jumlah * $detail->harga);
+            });
+
+        // Sisa tagihan
+        $sisa = $totalTagihan - $totalBayar;
 
         $pdf = Pdf::loadView('exports.nota', compact('pesanan', 'total', 'totalBayar', 'sisa'));
 

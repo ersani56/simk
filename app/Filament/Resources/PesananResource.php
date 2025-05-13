@@ -103,9 +103,9 @@ class PesananResource extends Resource
                         Select::make('satuan')
                             ->label('Satuan')
                             ->options([
-                                'pcs' => 'PCS',
+                                'pcs' => 'Pcs',
                                 'stel' => 'Stel',
-                                'paket' => 'Paket',
+                                'pasangan' => 'Pasangan',
                             ])
                             ->required()
                             ->live()
@@ -224,16 +224,10 @@ class PesananResource extends Resource
                             ->numeric()
                             ->required(),
 
-                        Select::make('status')
+                        TextInput::make('status')
                             ->label('Status')
                             ->default('antrian')
-                            ->options([
-                                'antrian' => 'Antrian',
-                                'dipotong' => 'Dipotong',
-                                'dijahit' => 'Dijahit',
-                                'disablon' => 'Disablon',
-                                'selesai' => 'Selesai',
-                            ]),
+                            ->disabled(),
 
                         TextInput::make('ket')
                             ->label('Keterangan'),

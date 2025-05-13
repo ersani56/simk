@@ -130,6 +130,7 @@ class PesananDetail extends Model
     {
         return $query->where('is_pasangan', true);
     }
+
     public function getStatusAttribute()
     {
         $id = $this->id;

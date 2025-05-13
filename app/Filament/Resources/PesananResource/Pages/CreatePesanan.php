@@ -17,7 +17,7 @@ class CreatePesanan extends CreateRecord
         foreach ($details as $detail) {
             if (in_array($detail['satuan'] ?? null, ['stel', 'paket']) && !empty($detail['items_pasangan'])) {
                 // Generate unique group ID for this set
-                $groupId = Str::uuid();
+                $groupId = Str::random(8);
 
                 // Update main product with group ID
                 $this->record->pesananDetails()
@@ -28,7 +28,7 @@ class CreatePesanan extends CreateRecord
                 foreach ($detail['items_pasangan'] as $pasangan) {
                     $this->record->pesananDetails()->create([
                         'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
-                        'satuan' => 'pcs',
+                        'satuan' => 'pasangan',
                         'harga' => 0,
                         'upah_potong' => (int)($pasangan['upah_potong_pasangan'] ?? 0),
                         'upah_jahit' => (int)($pasangan['upah_jahit_pasangan'] ?? 0),
@@ -36,7 +36,7 @@ class CreatePesanan extends CreateRecord
                         'ukuran' => $detail['ukuran'] ?? '-',
                         'jumlah' => $detail['jumlah'] ?? 1,
                         'status' => $detail['status'] ?? 'antrian',
-                        'ket' => 'Pasangan dari ' . $detail['kode_bjadi'],
+                        'ket' => $detail['ket'],
                         'setelan' => $groupId,
                         'is_pasangan' => true,
                     ]);

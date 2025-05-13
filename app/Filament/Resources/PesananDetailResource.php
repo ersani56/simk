@@ -23,6 +23,7 @@ class PesananDetailResource extends Resource
     protected static ?string $navigationLabel = 'Proses Produksi';
     protected static ?string $modelLabel = 'Proses Produksi';
     protected static ?string $navigationGroup = 'Produksi';
+    protected static ?int $navigationSort = 1;
 
     public static function getEloquentQuery(): Builder
     {
@@ -45,8 +46,12 @@ class PesananDetailResource extends Resource
     {
         return $table
             //->query(PesananDetail::with('gajiKaryawans'))
+            ->defaultSort('created_at', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('no_faktur')->searchable()->label('No. Faktur'),
+                Tables\Columns\TextColumn::make('no_faktur')
+                ->searchable()
+                ->label('No. Faktur')
+                ->sortable(),
                 Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')->label('Nama Produk')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('satuan'),
                 Tables\Columns\TextColumn::make('bahanjadi.gambar1')
