@@ -1,103 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Nota Tagihan List</title>
+    <title>Daftar Tagihan</title>
     <style>
-        /* Tambahkan style yang sesuai */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 14px;
-            font-size: 14px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 12px 0;
-        }
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-            line-height: 1;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
+        body { font-family: sans-serif; font-size: 12px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+        h3, h4 { margin-bottom: 5px; }
+        ul { list-style: none; padding: 0; }
     </style>
 </head>
 <body>
-    @foreach($notaTagihan as $pesanan)
-        <div style="page-break-after: always;">
-            <h2>Nota Tagihan</h2>
-            <p>Nama Pelanggan: {{ $pesanan->pelanggan->nama_plg }}</p>
-            <p>No Faktur: {{ $pesanan->no_faktur }}</p>
-            <p>Tanggal: {{ $pesanan->tanggal }}</p>
+    <h3>Daftar Tagihan Pelanggan</h3>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Nama Barang</th>
-                        <th>Size</th>
-                        <th>Qty</th>
-                        <th>Harga</th>
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @php
-                    $total = 0;
-                    $totalQty = 0;
-                    $grouped = $pesanan->pesananDetails
-                        ->filter(fn($detail) => $detail->setelan === null || $detail->satuan === 'stel')
-                        ->groupBy(fn($d) => $d->bahanjadi->nama_bjadi ?? '-');
-                @endphp
+    <table>
+        <thead>
+            <tr>
+                <th>No Faktur</th>
+                <th>Tanggal</th>
+                <th>Pelanggan</th>
+                <th>Total Tagihan</th>
+                <th>Total Bayar</th>
+                <th>Sisa</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach ($pesanans as $p)
+                <tr>
+                    <td>{{ $p->no_faktur }}</td>
+                    <td>{{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}</td>
+                    <td>{{ $p->pelanggan->nama_plg ?? '-' }}</td>
+                    <td>{{ number_format($p->total_tagihan ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ number_format($p->total_bayar ?? 0, 0, ',', '.') }}</td>
+                    <td>{{ number_format(($p->total_tagihan - $p->total_bayar) ?? 0, 0, ',', '.') }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
 
-                @foreach($grouped as $namaBarang => $items)
-                    @foreach($items as $index => $detail)
-                        @php
-                            $subtotal = $detail->jumlah * $detail->harga;
-                            $total += $subtotal;
-                            $totalQty += $detail->jumlah;
-                        @endphp
-                        <tr>
-                            @if($index === 0)
-                            <td rowspan="{{ $items->count() }}" style="vertical-align: top;">{{ $namaBarang }}</td>
-                            @endif
-                            <td>{{ $detail->ukuran }}</td>
-                            <td>{{ $detail->jumlah.' '.$detail->satuan }} </td>
-                            <td>Rp. {{ number_format($detail->harga, 0, ',', '.') }}</td>
-                            <td>Rp. {{ number_format($subtotal, 0, ',', '.') }}</td>
-                        </tr>
-                    @endforeach
-                @endforeach
-                </tbody>
-            </table>
-
-            <p>Total: Rp. {{ number_format($total, 0, ',', '.') }}</p>
-            <p>Total Bayar: Rp. {{ number_format($pesanan->totalPembayaran(), 0, ',', '.') }}</p>
-            <p>Sisa Bon: Rp. {{ number_format($total - $pesanan->totalPembayaran(), 0, ',', '.') }}</p>
-
-            @if($pesanan->pembayaran->count())
-                <h2>Riwayat Pembayaran</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Tanggal</th>
-                            <th>Nominal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($pesanan->pembayaran as $p)
-                            <tr>
-                                <td>{{ $p->tanggal_bayar }}</td>
-                                <td>Rp. {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @endif
-        </div>
-    @endforeach
+    <h4>Ringkasan:</h4>
+    <ul>
+        <li>Total Tagihan: Rp {{ number_format($totalTagihan, 0, ',', '.') }}</li>
+        <li>Total Dibayar: Rp {{ number_format($totalBayar, 0, ',', '.') }}</li>
+        <li>Sisa Tagihan: Rp {{ number_format($sisaTagihan, 0, ',', '.') }}</li>
+    </ul>
 </body>
 </html>
