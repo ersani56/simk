@@ -93,9 +93,9 @@ class NotaTagihanResource extends Resource
                     ->preload(),
             ])
             ->headerActions([
-            Action::make('cetak_seluruh_tagihan')
+                Action::make('cetak_seluruh_tagihan')
                 ->label('Cetak Seluruh Tagihan')
-                ->url(fn () => route('nota-tagihan.cetak', request()->query()))
+                ->url(fn () => route('nota-tagihan.cetak-list', request()->query()))
                 ->openUrlInNewTab()
                 ->icon('heroicon-o-printer'),
             ])
@@ -103,7 +103,7 @@ class NotaTagihanResource extends Resource
                 Tables\Actions\ViewAction::make(),
                 Action::make('cetak_pdf')
                     ->label('Cetak PDF')
-                    ->url(fn ($record) => route('nota-tagihan.cetak', $record->no_faktur))
+                    ->url(fn ($record) => route('nota-tagihan.cetak', ['no_faktur' => $record->no_faktur]))
                     ->openUrlInNewTab()
                     ->icon('heroicon-o-printer'),
             ]);

@@ -62,4 +62,20 @@ class NotaTagihanPrintController extends Controller
 
         return $pdf->stream('NotaTagihan-' . $noFaktur . '.pdf');
     }
+
+    public function cetakListPDF(Request $request)
+    {
+        $pelangganId = $request->query('pelanggan_id');
+        $notaTagihan = Pesanan::with(['pelanggan', 'pesananDetails.bahanjadi', 'pembayaran']);
+
+        if ($pelangganId) {
+            $notaTagihan->where('kode_plg', $pelangganId);
+        }
+
+        $notaTagihan = $notaTagihan->get();
+
+        $pdf = Pdf::loadView('cetak.nota-tagihan-list', compact('notaTagihan'));
+
+        return $pdf->stream('NotaTagihanList.pdf');
+    }
 }
