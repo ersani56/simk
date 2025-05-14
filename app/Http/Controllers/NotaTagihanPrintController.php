@@ -65,25 +65,30 @@ class NotaTagihanPrintController extends Controller
         return $pdf->stream('NotaTagihan-' . $noFaktur . '.pdf');
     }
 
-    public function cetakSemua()
+    public function cetakSemua(Request $request)
     {
-        // Ambil semua pesanan dengan relasi pelanggan dan pembayaran
-        $pesanans = Pesanan::with('pelanggan', 'pembayaran')->get();
+        $query = Pesanan::with('pelanggan');
 
-        // Hitung total
+        // Ambil ID pelanggan dari filter
+        $pelangganId = $request->input('tableFilters.pelanggan.value');
+
+        if ($pelangganId) {
+            $pelanggan = \App\Models\Pelanggan::find($pelangganId);
+            if ($pelanggan) {
+                $query->where('kode_plg', $pelanggan->kode_plg);
+            }
+        }
+
+        $pesanans = $query->get();
+
         $totalTagihan = $pesanans->sum('total_tagihan');
         $totalBayar = $pesanans->sum('total_bayar');
         $sisaTagihan = $totalTagihan - $totalBayar;
 
-        // Generate PDF
-        $pdf = Pdf::loadView('cetak.nota-tagihan-list', compact(
-            'pesanans',
-            'totalTagihan',
-            'totalBayar',
-            'sisaTagihan'
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('cetak.nota-tagihan-list', compact(
+            'pesanans', 'totalTagihan', 'totalBayar', 'sisaTagihan'
         ));
 
-        // Tampilkan PDF langsung di browser
         return $pdf->stream('daftar-tagihan.pdf');
     }
 }

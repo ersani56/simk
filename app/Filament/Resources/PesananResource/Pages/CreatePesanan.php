@@ -25,22 +25,23 @@ class CreatePesanan extends CreateRecord
                     ->update(['setelan' => $groupId]);
 
                 // Create pasangan items
-                foreach ($detail['items_pasangan'] as $pasangan) {
-                    $this->record->pesananDetails()->create([
-                        'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
-                        'satuan' => 'pasangan',
-                        'harga' => 0,
-                        'upah_potong' => (int)($pasangan['upah_potong_pasangan'] ?? 0),
-                        'upah_jahit' => (int)($pasangan['upah_jahit_pasangan'] ?? 0),
-                        'upah_sablon' => (int)($pasangan['upah_sablon_pasangan'] ?? 0),
-                        'ukuran' => $detail['ukuran'] ?? '-',
-                        'jumlah' => $detail['jumlah'] ?? 1,
-                        'status' => $detail['status'] ?? 'antrian',
-                        'ket' => $detail['ket'],
-                        'setelan' => $groupId,
-                        'is_pasangan' => true,
-                    ]);
-                }
+        foreach ($detail['items_pasangan'] as $pasangan) {
+            $this->record->pesananDetails()->create([
+                'no_faktur' => $this->record->no_faktur, // tambahkan ini
+                'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
+                'satuan' => 'pasangan',
+                'harga' => 0,
+                'upah_potong' => (int)($pasangan['upah_potong_pasangan'] ?? 0),
+                'upah_jahit' => (int)($pasangan['upah_jahit_pasangan'] ?? 0),
+                'upah_sablon' => (int)($pasangan['upah_sablon_pasangan'] ?? 0),
+                'ukuran' => $detail['ukuran'] ?? '-',
+                'jumlah' => $detail['jumlah'] ?? 1,
+                'status' => $detail['status'] ?? 'antrian',
+                'ket' => $detail['ket'],
+                'setelan' => $groupId,
+                'is_pasangan' => true,
+            ]);
+        }
             }
         }
     }

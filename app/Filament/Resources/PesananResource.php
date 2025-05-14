@@ -227,7 +227,8 @@ class PesananResource extends Resource
                         TextInput::make('status')
                             ->label('Status')
                             ->default('antrian')
-                            ->disabled(),
+                            ->disabled()
+                            ->dehydrated(),
 
                         TextInput::make('ket')
                             ->label('Keterangan'),

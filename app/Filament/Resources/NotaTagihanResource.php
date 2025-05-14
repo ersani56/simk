@@ -93,11 +93,13 @@ class NotaTagihanResource extends Resource
                     ->preload(),
             ])
             ->headerActions([
-                Action::make('cetak_seluruh_tagihan')
-                    ->label('Cetak Semua Tagihan')
-                    ->url(route('cetak.tagihan'), shouldOpenInNewTab: true)
+                Action::make('Cetak Berdasarkan Filter')
+                    ->label('Cetak Berdasarkan Filter')
                     ->icon('heroicon-o-printer')
-                    ->color('primary'),
+                    ->color('primary')
+                    ->url(function () {
+                        return route('cetak.tagihan', request()->query());
+                    }, shouldOpenInNewTab: true)
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
