@@ -46,7 +46,7 @@ class PesananDetailResource extends Resource
     {
         return $table
             //->query(PesananDetail::with('gajiKaryawans'))
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('updated_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')
                 ->searchable()
