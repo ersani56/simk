@@ -10,6 +10,11 @@ class CreatePesanan extends CreateRecord
 {
     protected static string $resource = PesananResource::class;
 
+    protected function getRedirectUrl(): string
+    {
+        return static::getResource()::getUrl('index');
+    }
+
     protected function afterCreate(): void
     {
         $details = $this->data['pesananDetails'] ?? [];

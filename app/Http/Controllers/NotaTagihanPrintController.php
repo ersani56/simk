@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use Carbon\Carbon;
 use App\Models\Pesanan;
+use App\Models\Pelanggan;
 use App\Models\Pembayaran;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -67,16 +68,11 @@ class NotaTagihanPrintController extends Controller
 
     public function cetakSemua(Request $request)
     {
-        $query = Pesanan::with('pelanggan');
+        $query = Pesanan::with(['pelanggan', 'pembayaran']);
 
-        // Ambil ID pelanggan dari filter
-        $pelangganId = $request->input('tableFilters.pelanggan.value');
-
-        if ($pelangganId) {
-            $pelanggan = \App\Models\Pelanggan::find($pelangganId);
-            if ($pelanggan) {
-                $query->where('kode_plg', $pelanggan->kode_plg);
-            }
+        if ($request->has('tableFilters.kode_plg.value')) {
+            $kodePlg = $request->input('tableFilters.kode_plg.value');
+            $query->where('kode_plg', $kodePlg);
         }
 
         $pesanans = $query->get();

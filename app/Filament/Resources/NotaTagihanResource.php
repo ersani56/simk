@@ -2,15 +2,16 @@
 
 namespace App\Filament\Resources;
 
-use Illuminate\Support\Facades\DB; // Tambahkan ini
-use Filament\Tables\Actions\Action;
 use Filament\Forms;
 use Filament\Tables;
 use App\Models\Pesanan;
 use Filament\Forms\Form;
+use App\Models\Pelanggan;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
+use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB; // Tambahkan ini
 use App\Filament\Resources\NotaTagihanResource\Pages;
 
 class NotaTagihanResource extends Resource
@@ -20,6 +21,7 @@ class NotaTagihanResource extends Resource
     protected static ?string $navigationLabel = 'Nota Tagihan';
     protected static ?string $pluralModelLabel = 'Nota Tagihan';
     protected static ?string $navigationGroup = 'Laporan';
+
     public static function shouldRegisterNavigation(): bool
     {
         return auth()->user()->hasRole('admin');
@@ -86,8 +88,8 @@ class NotaTagihanResource extends Resource
                     ]),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('pelanggan')
-                    ->relationship('pelanggan', 'nama_plg')
+                Tables\Filters\SelectFilter::make('kode_plg')
+                    ->options(Pelanggan::all()->pluck('nama_plg', 'kode_plg'))
                     ->label('Filter by Pelanggan')
                     ->searchable()
                     ->preload(),
