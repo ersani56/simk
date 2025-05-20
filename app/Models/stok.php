@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-class stok extends Model
+class Stok extends Model
 {
     use HasFactory;
     protected $fillable = ['kode_stok','kode_bbaku','nama_bbaku','jml_stok','lokasi'];

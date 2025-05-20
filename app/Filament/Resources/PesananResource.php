@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -39,6 +40,7 @@ class PesananResource extends Resource
                 'pesanans.no_faktur',
                 'pesanans.kode_plg',
                 'pesanans.tanggal',
+                'pesanans.catatan',
                 'pesanans.created_at',
                 'pesanans.updated_at'
             ])
@@ -52,6 +54,7 @@ class PesananResource extends Resource
                 'pesanans.no_faktur',
                 'pesanans.kode_plg',
                 'pesanans.tanggal',
+                'pesanans.catatan',
                 'pesanans.created_at',
                 'pesanans.updated_at'
             ]);
@@ -74,6 +77,10 @@ class PesananResource extends Resource
                     ->options(Pelanggan::pluck('nama_plg', 'kode_plg'))
                     ->searchable()
                     ->required(),
+                Textarea::make('catatan')
+                    ->label('Catatan')
+                    ->nullable()
+                    ->rows(5),
                 DatePicker::make('tanggal')
                     ->label('Tanggal')
                     ->required()
@@ -255,6 +262,7 @@ class PesananResource extends Resource
                     ->label('Nama Pelanggan')
                     ->searchable(),
                 TextColumn::make('tanggal')->label('Tanggal')->date(),
+                TextColumn::make('catatan')->label('Catatan') ->limit(100),
                 TextColumn::make('pesanan_details_count')->label('Jumlah Item')
                     ->sortable()
                     ->alignCenter()

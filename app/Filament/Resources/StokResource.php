@@ -18,7 +18,6 @@ class StokResource extends Resource
 {
     protected static ?string $model = Stok::class;
     protected static ?string $navigationGroup= 'Transaksi';
-    protected static ?string $navigationLabel = 'Pembelian';
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     public static function shouldRegisterNavigation(): bool
@@ -67,10 +66,9 @@ class StokResource extends Resource
         return $table
         ->query(
             Stok::query()
-            ->selectRaw('CONCAT(kode_bbaku, "-", lokasi) as id, kode_bbaku, lokasi, SUM(jml_stok) as stok')
-            ->groupBy('kode_bbaku', 'lokasi')
+                ->selectRaw('id, CONCAT(kode_bbaku, "-", lokasi) as kode_lokasi, kode_bbaku, lokasi, SUM(jml_stok) as stok')
+                ->groupBy('kode_bbaku', 'lokasi', 'id')
         )
-
         ->columns([
             TextColumn::make('kode_bbaku')->sortable()->searchable(),
             TextColumn::make('bahanBaku.nama_bbaku') // Ambil nama bahan baku dari relasi

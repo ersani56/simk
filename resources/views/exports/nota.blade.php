@@ -194,6 +194,12 @@
                 </tbody>
             </table>
         </div>
+            @if($pesanan->catatan)
+                <div style="margin-top: 20px;">
+                    <b>Catatan:</b></br>
+                    {!! nl2br($pesanan->catatan) !!}
+                </div>
+            @endif
     @endif
 </body>
 </html>

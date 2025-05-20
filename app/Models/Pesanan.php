@@ -11,7 +11,7 @@ class Pesanan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['no_faktur', 'kode_plg', 'tanggal','total_tagihan'];
+    protected $fillable = ['no_faktur', 'kode_plg', 'tanggal','total_tagihan','catatan'];
 
     protected static function boot()
     {
