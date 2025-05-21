@@ -35,6 +35,7 @@ class PesananResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
+            ->latest('updated_at')
             ->select([
                 'pesanans.id',
                 'pesanans.no_faktur',
@@ -79,7 +80,7 @@ class PesananResource extends Resource
                     ->required(),
                 Textarea::make('catatan')
                     ->label('Catatan')
-                    ->nullable()
+                    ->default('-')
                     ->rows(5),
                 DatePicker::make('tanggal')
                     ->label('Tanggal')
@@ -146,14 +147,18 @@ class PesananResource extends Resource
                             ->hidden(fn ($record) => $record?->is_pasangan),
 
                         // Form tambahan untuk setelan/paket
-                        Section::make('Detail Setelan/Paket')
+                        Section::make('Detail Setelan')
                         ->schema([
                             Repeater::make('items_pasangan')
                                 ->label('Produk Pasangan')
                                 ->schema([
                                     Select::make('kode_bjadi_pasangan')
                                         ->label('Pilih Produk Pasangan')
-                                        ->options(Bahanjadi::pluck('nama_bjadi', 'kode_bjadi'))
+                                        ->options(Bahanjadi::where(function ($query) {
+                                                    $query->where('kode_bjadi', 'like', 'T%')
+                                                        ->orWhere('kode_bjadi', 'like', 'C%')
+                                                        ->orWhere('kode_bjadi', 'like', 'R%');
+                                                })->pluck('nama_bjadi', 'kode_bjadi'))
                                         ->searchable()
                                         ->required()
                                         ->live()
