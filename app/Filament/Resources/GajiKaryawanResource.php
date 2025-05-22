@@ -43,7 +43,10 @@ class GajiKaryawanResource extends Resource
         return $table
             ->recordUrl(null)
             ->columns([
-                Tables\Columns\TextColumn::make('karyawan.name')->label('Nama Karyawan'),
+                Tables\Columns\TextColumn::make('karyawan.name')
+                ->label('Nama Karyawan')
+                ->searchable()
+                ->sortable(),
                 Tables\Columns\TextColumn::make('peran')->label('Peran'),
                 Tables\Columns\TextColumn::make('pesananDetail.bahanjadi.nama_bjadi')
                 ->label('Nama Barang')

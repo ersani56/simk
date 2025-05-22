@@ -46,7 +46,7 @@ class PesananDetailResource extends Resource
     {
         return $table
             //->query(PesananDetail::with('gajiKaryawans'))
-            ->defaultSort('updated_at', 'desc')
+            ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')
                 ->searchable()
@@ -73,7 +73,8 @@ class PesananDetailResource extends Resource
                     default => 'primary',
                 })
                 ->label('Status')
-                ->formatStateUsing(fn ($state) => ucfirst($state)),
+                ->formatStateUsing(fn ($state) => ucfirst($state))
+                ->sortable(),
 
                 Tables\Columns\TextColumn::make('hasil_potong')
                 ->label('dipotong')
@@ -126,69 +127,92 @@ class PesananDetailResource extends Resource
             ])
             ->actions([
                 Tables\Actions\Action::make('update_status')
-                ->label('')
-                ->icon('heroicon-m-arrow-up-circle')
-                ->tooltip('Update Status')
-                ->form(function (PesananDetail $record) {
-                    $user = auth()->user();
-                    $userId = $user->id;
-                    $isAdmin = $user->hasRole('admin');
-                    $availableStatus = $isAdmin
-                        ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'selesai' => 'selesai','proses' => 'proses']
-                        : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
+            ->label('')
+            ->icon('heroicon-m-arrow-up-circle')
+            ->tooltip('Update Status')
+            ->form(function (PesananDetail $record) {
+                $user = auth()->user();
+                $userId = $user->id;
+                $isAdmin = $user->hasRole('admin');
+                $availableStatus = $isAdmin
+                    ? ['antrian' => 'antrian', 'dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon', 'semua' => 'semua']
+                    : ['dipotong' => 'dipotong', 'dijahit' => 'dijahit', 'disablon' => 'disablon'];
 
-                    return [
-                        Select::make('status')
-                            ->options($availableStatus)
-                            ->required()
-                            ->reactive(),
+                return [
+                    Select::make('status')
+                        ->options($availableStatus)
+                        ->required()
+                        ->reactive(),
 
-                        TextInput::make('jumlah')
-                            ->label('Jumlah')
-                            ->numeric()
-                            ->minValue(1)
-                            ->required()
-                            ->default(function (callable $get) use ($record, $userId) {
-                                $status = $get('status');
-                                if (!$status) return 1;
+                    TextInput::make('jumlah')
+                        ->label('Jumlah')
+                        ->numeric()
+                        ->required()
+                        ->default(function (callable $get) use ($record, $userId) {
+                            $status = $get('status');
+                            if (!$status) return 1;
 
+                            if ($status == 'semua') {
+                                $sudahUser = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->whereIn('peran', ['pemotong', 'penjahit', 'penyablon'])
+                                    ->where('karyawan_id', $userId)
+                                    ->sum('jumlah');
+
+                                $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->whereIn('peran', ['pemotong', 'penjahit', 'penyablon'])
+                                    ->sum('jumlah');
+
+                                $sisa = max(0, $record->jumlah - $totalSudah);
+
+                                return $sisa > 0 ? 1 : 0;
+                            } else {
                                 $peranMap = ['dipotong' => 'pemotong', 'dijahit' => 'penjahit', 'disablon' => 'penyablon'];
                                 $peran = $peranMap[$status] ?? null;
 
                                 if (!$peran) return 1;
 
-                                // Hitung jumlah yang sudah dikerjakan oleh user ini untuk peran ini
                                 $sudahUser = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                     ->where('karyawan_id', $userId)
                                     ->where('peran', $peran)
                                     ->sum('jumlah');
 
-                                // Hitung total yang sudah dikerjakan oleh semua user untuk peran ini
                                 $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                     ->where('peran', $peran)
                                     ->sum('jumlah');
 
-                                // Sisa yang bisa dikerjakan
                                 $sisa = max(0, $record->jumlah - $totalSudah);
 
-                                // Default ke 1 jika ada sisa, atau 0 jika tidak ada sisa
                                 return $sisa > 0 ? 1 : 0;
-                            })
-                            ->hint(function (callable $get) use ($record, $userId) {
-                                $status = $get('status');
-                                if (!$status) return 'Pilih status terlebih dahulu';
+                            }
+                        })
+                        ->hint(function (callable $get) use ($record, $userId) {
+                            $status = $get('status');
+                            if (!$status) return 'Pilih status terlebih dahulu';
 
+                            if ($status == 'semua') {
+                                $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->whereIn('peran', ['pemotong', 'penjahit', 'penyablon'])
+                                    ->sum('jumlah');
+
+                                $sudahUser = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                    ->whereIn('peran', ['pemotong', 'penjahit', 'penyablon'])
+                                    ->where('karyawan_id', $userId)
+                                    ->sum('jumlah');
+
+                                $sisa = max(0, $record->jumlah - $totalSudah);
+
+                                return 'Total dikerjakan: ' . $totalSudah . '/' . $record->jumlah .
+                                    ' (Anda: ' . $sudahUser . ') | Sisa: ' . $sisa;
+                            } else {
                                 $peranMap = ['dipotong' => 'pemotong', 'dijahit' => 'penjahit', 'disablon' => 'penyablon'];
                                 $peran = $peranMap[$status] ?? null;
 
                                 if (!$peran) return '-';
 
-                                // Hitung total yang sudah dikerjakan oleh semua user untuk peran ini
                                 $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                     ->where('peran', $peran)
                                     ->sum('jumlah');
 
-                                // Hitung yang sudah dikerjakan oleh user ini untuk peran ini
                                 $sudahUser = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                     ->where('karyawan_id', $userId)
                                     ->where('peran', $peran)
@@ -198,108 +222,116 @@ class PesananDetailResource extends Resource
 
                                 return 'Total dikerjakan: ' . $totalSudah . '/' . $record->jumlah .
                                     ' (Anda: ' . $sudahUser . ') | Sisa: ' . $sisa;
-                            })
-                            ->reactive()
-                            ->maxValue(function (callable $get) use ($record, $userId) {
-                                $status = $get('status');
+                            }
+                        })
+                        ->reactive()
+                        ->maxValue(function (callable $get) use ($record) {
+                            $status = $get('status');
+                            if ($status == 'semua') {
+                                return $record->jumlah;
+                            } else {
                                 $peranMap = ['dipotong' => 'pemotong', 'dijahit' => 'penjahit', 'disablon' => 'penyablon'];
                                 $peran = $peranMap[$status] ?? null;
 
                                 if (!$peran) return $record->jumlah;
 
-                                // Hitung total yang sudah dikerjakan oleh semua user untuk peran ini
                                 $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                     ->where('peran', $peran)
                                     ->sum('jumlah');
 
                                 return max(0, $record->jumlah - $totalSudah);
-                            })
+                            }
+                        })
+                        ->minValue(function (callable $get) use ($record) {
+                            $status = $get('status');
+                            if ($status == 'semua') {
+                                return 1;
+                            } else {
+                                return 1;
+                            }
+                        })
+                ];
+            })
+            ->action(function (PesananDetail $record, array $data) {
+                if (!auth()->check()) {
+                    abort(403, 'Tidak diizinkan.');
+                }
+
+                $status = $data['status'];
+                $jumlah = (int) $data['jumlah'];
+                $user = auth()->user();
+                $userId = $user->id;
+
+                if ($jumlah <= 0) {
+                    throw new \Exception('Jumlah harus lebih dari 0');
+                }
+
+                $validStatus = ['dipotong', 'dijahit', 'disablon'];
+                if (!$user->hasRole('admin') && !in_array($status, $validStatus) && $status != 'semua') {
+                    abort(403, 'Tidak diizinkan mengubah status ini.');
+                }
+
+                if ($status == 'semua') {
+                    $peranMap = [
+                        'pemotong' => ['upah' => $record->upah_potong, 'jumlah' => $jumlah],
+                        'penjahit' => ['upah' => $record->upah_jahit, 'jumlah' => $jumlah],
+                        'penyablon' => ['upah' => $record->upah_sablon, 'jumlah' => $jumlah],
                     ];
-                })
-                ->action(function (PesananDetail $record, array $data) {
-                    if (!auth()->check()) {
-                        abort(403, 'Tidak diizinkan.');
+
+                    DB::transaction(function () use ($record, $userId, $peranMap, $jumlah) {
+                    foreach ($peranMap as $peran => $detail) {
+                        GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', $peran)
+                            ->delete();
+
+                        GajiKaryawan::create([
+                            'pesanan_detail_id' => $record->id,
+                            'karyawan_id' => $userId,
+                            'peran' => $peran,
+                            'tanggal_dibayar' => now(),
+                            'jumlah' => $jumlah,
+                            'upah' => $detail['upah'],
+                            'total' => $jumlah * $detail['upah'],
+                        ]);
                     }
 
-                    $status = $data['status'];
-                    $jumlah = (int) $data['jumlah'];
-                    $user = auth()->user();
-                    $userId = $user->id;
-
-                    // // Admin paksa selesai tanpa validasi
-                    // if ($status === 'selesai' && $user->hasRole('admin')) {
-                    //     $record->update(['status' => 'selesai']);
-                    //     return;
-                    // }
-
-                    // Validasi jumlah
-                    if ($jumlah <= 0) {
-                        throw new \Exception('Jumlah harus lebih dari 0');
-                    }
-
-                    $validStatus = ['dipotong', 'dijahit', 'disablon'];
-                    if (!$user->hasRole('admin') && !in_array($status, $validStatus)) {
-                        abort(403, 'Tidak diizinkan mengubah status ini.');
-                    }
-
+                    $record->update([
+                        'pemotong' => $userId,
+                        'penjahit' => $userId,
+                        'penyablon' => $userId,
+                        'status' => 'selesai',
+                    ]);
+                });
+                } else {
                     $peranMap = ['dipotong' => 'pemotong', 'dijahit' => 'penjahit', 'disablon' => 'penyablon'];
                     $peran = $peranMap[$status] ?? null;
                     $upahField = ['dipotong' => 'upah_potong', 'dijahit' => 'upah_jahit', 'disablon' => 'upah_sablon'];
                     $upah = $peran ? ($record->{$upahField[$status]} ?? 0) : 0;
 
-                    // Validasi total jumlah tidak melebihi pesanan
-                    if ($peran) {
-                        $totalSudah = GajiKaryawan::where('pesanan_detail_id', $record->id)
-                            ->where('peran', $peran)
-                            ->sum('jumlah');
-
-                        if (($totalSudah + $jumlah) > $record->jumlah) {
-                            throw new \Exception('Total jumlah untuk peran ini tidak boleh melebihi jumlah pesanan. Sisa yang bisa dikerjakan: ' . ($record->jumlah - $totalSudah));
-                        }
-                    }
-                        // Jika admin memilih 'selesai', tandai override status
-                        DB::transaction(function () use ($record, $status, $userId, $peran, $upah, $jumlah, $user) {
-                            // Update status pesanan
-                            $updateData = [
-                                'status' => $status,
-                            ];
-
-                            if ($peran) {
-                                $updateData[$peran] = $userId;
-                            }
-
-                            // Cek jika semua pekerjaan telah tercapai
-                            $totalPekerjaan = $record->jumlah;
-                            $pekerjaanSelesai = GajiKaryawan::where('pesanan_detail_id', $record->id)
-                                ->selectRaw('SUM(jumlah) as total')
-                                ->first()->total ?? 0;
-
-                            if ($pekerjaanSelesai >= $totalPekerjaan) {
-                                $updateData['status'] = 'selesai';
-                            } elseif ($pekerjaanSelesai > 0 && $pekerjaanSelesai < $totalPekerjaan) {
-                                $updateData['status'] = 'proses';
-                            } else {
-                                $updateData['status'] = 'antrian';
-                            }
-
-                            $record->update($updateData);
+                    DB::transaction(function () use ($record, $status, $userId, $peran, $upah, $jumlah) {
+                        $updateData = [
+                            'status' => $status,
+                        ];
 
                         if ($peran) {
-                            // Cari record gaji yang sudah ada untuk user ini pada peran ini
+                            $updateData[$peran] = $userId;
+                        }
+
+                        $record->update($updateData);
+
+                        if ($peran) {
                             $existingGaji = GajiKaryawan::where('pesanan_detail_id', $record->id)
                                 ->where('karyawan_id', $userId)
                                 ->where('peran', $peran)
                                 ->first();
 
                             if ($existingGaji) {
-                                // Jika sudah ada, update jumlahnya dengan menambahkan jumlah baru
                                 $existingGaji->update([
                                     'jumlah' => $existingGaji->jumlah + $jumlah,
                                     'total' => ($existingGaji->jumlah + $jumlah) * $upah,
                                     'tanggal_dibayar' => now(),
                                 ]);
                             } else {
-                                // Jika belum ada, buat record baru
                                 GajiKaryawan::create([
                                     'pesanan_detail_id' => $record->id,
                                     'karyawan_id' => $userId,
@@ -311,73 +343,92 @@ class PesananDetailResource extends Resource
                                 ]);
                             }
                         }
+
+                        $totalPekerjaan = $record->jumlah;
+                        $pekerjaanSelesai = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        if ($pekerjaanSelesai >= $totalPekerjaan) {
+                            $record->update([
+                                'status' => 'selesai',
+                            ]);
+                        } elseif ($pekerjaanSelesai > 0 && $pekerjaanSelesai < $totalPekerjaan) {
+                            $record->update([
+                                'status' => 'proses',
+                            ]);
+                        } else {
+                            $record->update([
+                                'status' => 'antrian',
+                            ]);
+                        }
                     });
-                }),
-                ActionGroup::make([
-                    Action::make('reset_pemotong')
-                        ->label('Reset Pemotong')
-                        ->icon('heroicon-m-arrow-path')
-                        ->requiresConfirmation()
-                        ->visible(fn () => auth()->user()?->hasRole('admin'))
-                        ->action(function (PesananDetail $record) {
-                            if ($record->pemotong) {
-                                GajiKaryawan::where('pesanan_detail_id', $record->id)
-                                    ->where('peran', 'pemotong')
-                                    ->where('karyawan_id', $record->pemotong)
-                                    ->delete();
+                }
+            }),
+            ActionGroup::make([
+                Action::make('reset_pemotong')
+                    ->label('Reset Pemotong')
+                    ->icon('heroicon-m-arrow-path')
+                    ->requiresConfirmation()
+                    ->visible(fn () => auth()->user()?->hasRole('admin'))
+                    ->action(function (PesananDetail $record) {
+                        if ($record->pemotong) {
+                            GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                ->where('peran', 'pemotong')
+                                ->where('karyawan_id', $record->pemotong)
+                                ->delete();
 
-                                $record->pemotong = null;
+                            $record->pemotong = null;
 
-                                // Update status berdasarkan peran lain
-                                $record->status = $record->penyablon ? 'disablon' :
-                                                ($record->penjahit ? 'dijahit' : 'antrian');
-                                $record->save();
-                            }
-                        }),
+                            $record->status = $record->penyablon ? 'disablon' :
+                                            ($record->penjahit ? 'dijahit' : 'antrian');
+                            $record->save();
+                        }
+                    }),
 
-                    Action::make('reset_penjahit')
-                        ->label('Reset Penjahit')
-                        ->icon('heroicon-m-arrow-path')
-                        ->requiresConfirmation()
-                        ->visible(fn () => auth()->user()?->hasRole('admin'))
-                        ->action(function (PesananDetail $record) {
-                            if ($record->penjahit) {
-                                GajiKaryawan::where('pesanan_detail_id', $record->id)
-                                    ->where('peran', 'penjahit')
-                                    ->where('karyawan_id', $record->penjahit)
-                                    ->delete();
+                Action::make('reset_penjahit')
+                    ->label('Reset Penjahit')
+                    ->icon('heroicon-m-arrow-path')
+                    ->requiresConfirmation()
+                    ->visible(fn () => auth()->user()?->hasRole('admin'))
+                    ->action(function (PesananDetail $record) {
+                        if ($record->penjahit) {
+                            GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                ->where('peran', 'penjahit')
+                                ->where('karyawan_id', $record->penjahit)
+                                ->delete();
 
-                                $record->penjahit = null;
+                            $record->penjahit = null;
 
-                                $record->status = $record->penyablon ? 'disablon' :
-                                                ($record->pemotong ? 'dipotong' : 'antrian');
-                                $record->save();
-                            }
-                        }),
+                            $record->status = $record->penyablon ? 'disablon' :
+                                            ($record->pemotong ? 'dipotong' : 'antrian');
+                            $record->save();
+                        }
+                    }),
 
-                    Action::make('reset_penyablon')
-                        ->label('Reset Penyablon')
-                        ->icon('heroicon-m-arrow-path')
-                        ->requiresConfirmation()
-                        ->visible(fn () => auth()->user()?->hasRole('admin'))
-                        ->action(function (PesananDetail $record) {
-                            if ($record->penyablon) {
-                                GajiKaryawan::where('pesanan_detail_id', $record->id)
-                                    ->where('peran', 'penyablon')
-                                    ->where('karyawan_id', $record->penyablon)
-                                    ->delete();
+                Action::make('reset_penyablon')
+                    ->label('Reset Penyablon')
+                    ->icon('heroicon-m-arrow-path')
+                    ->requiresConfirmation()
+                    ->visible(fn () => auth()->user()?->hasRole('admin'))
+                    ->action(function (PesananDetail $record) {
+                        if ($record->penyablon) {
+                            GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                ->where('peran', 'penyablon')
+                                ->where('karyawan_id', $record->penyablon)
+                                ->delete();
 
-                                $record->penyablon = null;
+                            $record->penyablon = null;
 
-                                $record->status = $record->penjahit ? 'dijahit' :
-                                                ($record->pemotong ? 'dipotong' : 'antrian');
-                                $record->save();
-                            }
-                        }),
-                ])
-                ->icon('heroicon-m-arrow-path')
-                ->tooltip('Reset Status Per Peran')
-            ]);
+                            $record->status = $record->penjahit ? 'dijahit' :
+                                            ($record->pemotong ? 'dipotong' : 'antrian');
+                            $record->save();
+                        }
+                    }),
+            ])
+            ->icon('heroicon-m-arrow-path')
+            ->tooltip('Reset Status Per Peran')
+        ]);
     }
 
     public static function getPages(): array

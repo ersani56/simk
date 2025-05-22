@@ -100,8 +100,8 @@
 <body>
     <div  style="width: 40%; float: right;" margin-top = "30px">
         <div class="invoice-title"># INVOICE</div>
-        <div>Nomor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: INV26022535</div>
-        <div>Tanggal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: 05/03/2025</div>
+        <div>Nomor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $pesanan->no_faktur ?? '-' }}</div>
+        <div>Tanggal&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: {{ $pesanan->tanggal ? \Carbon\Carbon::parse($pesanan->tanggal)->format('d-m-Y') : '-' }}</div>
         <div>Nama Pelanggan : {{ $pesanan->pelanggan->nama_plg ?? '-' }}</div>
     </div>
     <div class="header" >
@@ -187,7 +187,7 @@
                 <tbody>
                     @foreach($pesanan->pembayaran as $p)
                         <tr>
-                            <td>{{ $p->tanggal_bayar }}</td>
+                            <td>{{ $p->tanggal_bayar ?  \Carbon\Carbon::parse($p->tanggal_bayar)->format('d-m-Y') : '-' }}</td>
                             <td>Rp. {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>
                         </tr>
                     @endforeach
