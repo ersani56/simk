@@ -187,6 +187,8 @@ class PesananResource extends Resource
                                         ->prefix('Rp.'),
                                 ])
                                 ->columns(1)
+                                ->minItems(0)
+                                ->maxItems(1)
                         ])
                         ->visible(fn ($get) => in_array($get('satuan'), ['stel', 'paket']))
                         ->collapsible(),

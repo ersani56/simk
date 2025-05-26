@@ -3,103 +3,48 @@
 namespace App\Filament\Resources\PesananResource\Pages;
 
 use App\Filament\Resources\PesananResource;
+use App\Models\PesananDetail;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 
 class EditPesanan extends EditRecord
 {
     protected static string $resource = PesananResource::class;
 
-    protected function handleRecordUpdate(Model $record, array $data): Model
+    protected function afterSave(): void
     {
-        // Simpan pesanan utama terlebih dahulu
-        $record = parent::handleRecordUpdate($record, $data);
-
-        // Pastikan ada data pesananDetails
-        if (empty($data['pesananDetails'])) {
-            return $record;
-        }
-
-        // Proses penyimpanan produk pasangan
-        $this->processPasanganItems($record, $data['pesananDetails']);
-
-        return $record;
+        $this->syncProdukPasangan();
     }
 
-    protected function processPasanganItems(Model $record, array $details): void
+    protected function syncProdukPasangan(): void
     {
-        // Hapus produk pasangan lama yang terkait
-        $record->pesananDetails()->where('is_pasangan', true)->delete();
+        $pesanan = $this->record;
 
-        foreach ($details as $detail) {
-            // Skip jika bukan setelan/paket atau tidak ada items_pasangan
-            if (!in_array($detail['satuan'] ?? null, ['stel', 'paket']) ||
-                empty($detail['items_pasangan'])) {
-                continue;
-            }
+        foreach ($pesanan->pesananDetails as $item) {
+            if (isset($item->items_pasangan) && is_array($item->items_pasangan)) {
+                foreach ($item->items_pasangan as $pasangan) {
+                    $sudahAda = PesananDetail::where('no_faktur', $pesanan->no_faktur)
+                        ->where('is_pasangan', true)
+                        ->where('setelan', $item->kode_bjadi)
+                        ->where('kode_bjadi', $pasangan['kode_bjadi_pasangan'])
+                        ->exists();
 
-            $groupId = $detail['setelan'] ?? Str::random(8);
-
-            // Update produk utama dengan group ID
-            $record->pesananDetails()
-                ->where('kode_bjadi', $detail['kode_bjadi'])
-                ->update(['setelan' => $groupId]);
-
-            // Simpan produk pasangan
-            foreach ($detail['items_pasangan'] as $pasangan) {
-                $record->pesananDetails()->create([
-                    'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
-                    'satuan' => 'pasangan',
-                    'harga' => 0,
-                    'upah_potong' => $pasangan['upah_potong_pasangan'],
-                    'upah_jahit' => $pasangan['upah_jahit_pasangan'],
-                    'upah_sablon' => $pasangan['upah_sablon_pasangan'],
-                    'ukuran' => $detail['ukuran'],
-                    'jumlah' => $detail['jumlah'],
-                    'ket' => $detail['ket'],
-                    'setelan' => $groupId,
-                    'is_pasangan' => true,
-                ]);
+                    if (! $sudahAda) {
+                        PesananDetail::create([
+                            'no_faktur' => $pesanan->no_faktur,
+                            'kode_bjadi' => $pasangan['kode_bjadi_pasangan'],
+                            'ukuran' => $item->ukuran,
+                            'jumlah' => $item->jumlah,
+                            'harga' => 0,
+                            'upah_potong' => $pasangan['upah_potong_pasangan'] ?? 0,
+                            'upah_jahit' => $pasangan['upah_jahit_pasangan'] ?? 0,
+                            'upah_sablon' => $pasangan['upah_sablon_pasangan'] ?? 0,
+                            'status' => 'antrian',
+                            'is_pasangan' => true,
+                            'setelan' => $item->kode_bjadi,
+                        ]);
+                    }
+                }
             }
         }
-    }
-
-    protected function fillFormWithDataAndCallHooks(Model $record, array $extraData = []): void
-    {
-        $record->load(['pesananDetails' => function ($query) {
-            $query->orderBy('is_pasangan', 'asc');
-        }]);
-
-        $processedDetails = [];
-        $groupedDetails = $record->pesananDetails->groupBy('setelan');
-
-        foreach ($groupedDetails as $groupId => $items) {
-            $mainItem = $items->firstWhere('is_pasangan', false);
-
-            if (!$mainItem) continue;
-
-            $detailData = $mainItem->toArray();
-
-            if (in_array($mainItem->satuan, ['stel', 'paket'])) {
-                $detailData['items_pasangan'] = $items->where('is_pasangan', true)
-                    ->map(function ($item) {
-                        return [
-                            'kode_bjadi_pasangan' => $item->kode_bjadi,
-                            'upah_potong_pasangan' => $item->upah_potong,
-                            'upah_jahit_pasangan' => $item->upah_jahit,
-                            'upah_sablon_pasangan' => $item->upah_sablon,
-                        ];
-                    })->values()->toArray();
-            }
-
-            $processedDetails[] = $detailData;
-        }
-
-        $data = array_merge($record->toArray(), [
-            'pesananDetails' => $processedDetails
-        ]);
-
-        parent::fillFormWithDataAndCallHooks($record, $data);
     }
 }

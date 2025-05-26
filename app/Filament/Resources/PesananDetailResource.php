@@ -126,7 +126,7 @@ class PesananDetailResource extends Resource
                     ->visible(fn() => auth()->user()->hasRole('admin'))
             ])
             ->actions([
-                Tables\Actions\Action::make('update_status')
+        Tables\Actions\Action::make('update_status')
             ->label('')
             ->icon('heroicon-m-arrow-up-circle')
             ->tooltip('Update Status')
@@ -279,29 +279,60 @@ class PesananDetailResource extends Resource
                     ];
 
                     DB::transaction(function () use ($record, $userId, $peranMap, $jumlah) {
-                    foreach ($peranMap as $peran => $detail) {
-                        GajiKaryawan::where('pesanan_detail_id', $record->id)
-                            ->where('peran', $peran)
-                            ->delete();
+                        foreach ($peranMap as $peran => $detail) {
+                            GajiKaryawan::where('pesanan_detail_id', $record->id)
+                                ->where('peran', $peran)
+                                ->delete();
 
-                        GajiKaryawan::create([
-                            'pesanan_detail_id' => $record->id,
-                            'karyawan_id' => $userId,
-                            'peran' => $peran,
-                            'tanggal_dibayar' => now(),
-                            'jumlah' => $jumlah,
-                            'upah' => $detail['upah'],
-                            'total' => $jumlah * $detail['upah'],
+                            GajiKaryawan::create([
+                                'pesanan_detail_id' => $record->id,
+                                'karyawan_id' => $userId,
+                                'peran' => $peran,
+                                'tanggal_dibayar' => now(),
+                                'jumlah' => $jumlah,
+                                'upah' => $detail['upah'],
+                                'total' => $jumlah * $detail['upah'],
+                            ]);
+                        }
+
+                        $record->update([
+                            'pemotong' => $userId,
+                            'penjahit' => $userId,
+                            'penyablon' => $userId,
                         ]);
-                    }
 
-                    $record->update([
-                        'pemotong' => $userId,
-                        'penjahit' => $userId,
-                        'penyablon' => $userId,
-                        'status' => 'selesai',
-                    ]);
-                });
+                        $totalPekerjaan = $record->jumlah;
+                        $pekerjaanSelesaiPemotong = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'pemotong')
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        $pekerjaanSelesaiPenjahit = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'penjahit')
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        $pekerjaanSelesaiPenyablon = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'penyablon')
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        if ($pekerjaanSelesaiPemotong >= $totalPekerjaan &&
+                            $pekerjaanSelesaiPenjahit >= $totalPekerjaan &&
+                            $pekerjaanSelesaiPenyablon >= $totalPekerjaan) {
+                            $record->update([
+                                'status' => 'selesai',
+                            ]);
+                        } elseif ($pekerjaanSelesaiPemotong > 0 || $pekerjaanSelesaiPenjahit > 0 || $pekerjaanSelesaiPenyablon > 0) {
+                            $record->update([
+                                'status' => 'proses',
+                            ]);
+                        } else {
+                            $record->update([
+                                'status' => 'antrian',
+                            ]);
+                        }
+                    });
                 } else {
                     $peranMap = ['dipotong' => 'pemotong', 'dijahit' => 'penjahit', 'disablon' => 'penyablon'];
                     $peran = $peranMap[$status] ?? null;
@@ -345,15 +376,28 @@ class PesananDetailResource extends Resource
                         }
 
                         $totalPekerjaan = $record->jumlah;
-                        $pekerjaanSelesai = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                        $pekerjaanSelesaiPemotong = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'pemotong')
                             ->selectRaw('SUM(jumlah) as total')
                             ->first()->total ?? 0;
 
-                        if ($pekerjaanSelesai >= $totalPekerjaan) {
+                        $pekerjaanSelesaiPenjahit = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'penjahit')
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        $pekerjaanSelesaiPenyablon = GajiKaryawan::where('pesanan_detail_id', $record->id)
+                            ->where('peran', 'penyablon')
+                            ->selectRaw('SUM(jumlah) as total')
+                            ->first()->total ?? 0;
+
+                        if ($pekerjaanSelesaiPemotong >= $totalPekerjaan &&
+                            $pekerjaanSelesaiPenjahit >= $totalPekerjaan &&
+                            $pekerjaanSelesaiPenyablon >= $totalPekerjaan) {
                             $record->update([
                                 'status' => 'selesai',
                             ]);
-                        } elseif ($pekerjaanSelesai > 0 && $pekerjaanSelesai < $totalPekerjaan) {
+                        } elseif ($pekerjaanSelesaiPemotong > 0 || $pekerjaanSelesaiPenjahit > 0 || $pekerjaanSelesaiPenyablon > 0) {
                             $record->update([
                                 'status' => 'proses',
                             ]);
