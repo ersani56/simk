@@ -69,7 +69,12 @@ class PesananResource extends Resource
     {
         return $form
             ->schema([
-                Section::make()
+                Grid::make([
+                            'default' => 1, // Ponsel
+                            'md' => 2,      // Tablet (dan ponsel landscape yang lebih lebar)
+                            'lg' => 4,
+                        ])
+                //Section::make()
                 ->schema([
                 TextInput::make('no_faktur')
                     ->disabled()
@@ -99,12 +104,12 @@ class PesananResource extends Resource
             Repeater::make('pesananDetails')
                 ->relationship('pesananDetails')
                 ->schema([
-                    Section::make(),
+                   // Section::make(),
                         Grid::make([
                             'default' => 1, // Ponsel
                             'md' => 3,      // Tablet (dan ponsel landscape yang lebih lebar)
                             'lg' => 6,
-                            ])
+                        ])
                         ->schema([
                                 TextInput::make('no_faktur')
                                     ->hidden()
@@ -311,20 +316,19 @@ class PesananResource extends Resource
                                         })
 
                         ])
-
-                ])
-                ->createItemButtonLabel('Tambah Item')
-                ->minItems(1)
-                ->reorderable(false)
-                ->cloneable(false)
-                ->columnSpanFull()
-                ->itemLabel(fn (array $state): ?string => $state['kode_bjadi'] ?? null)
-                ->deletable(true)
-                ->deleteAction(
-                    fn (Action $action) => $action->requiresConfirmation()
-                )
-                // ->columns(2),
-            ]);
+                    ])
+                        ->createItemButtonLabel('Tambah Item')
+                        ->minItems(1)
+                        ->reorderable(false)
+                        ->cloneable(false)
+                        ->columnSpanFull()
+                        //->itemLabel(fn (array $state): ?string => $state['kode_bjadi'] ?? null)
+                        ->deletable(true)
+                        ->deleteAction(
+                                fn (Action $action) => $action->requiresConfirmation()
+                            )
+                        // ->columns(2),
+                ]);
     }
 
 
