@@ -22,6 +22,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Forms\Components\Actions\Action;
 use App\Filament\Resources\PesananResource\Pages;
 
+use function GuzzleHttp\default_ca_bundle;
+
 class PesananResource extends Resource
 {
     protected static ?string $model = Pesanan::class;
@@ -90,22 +92,30 @@ class PesananResource extends Resource
                     ->label('Catatan')
                     ->default('-')
                     ->rows(1),
-                ])
-                ->columns(4),
+                ]),
+            //->columns(4),
 
                 // **Detail Pesanan**
-                Repeater::make('pesananDetails')
-                    ->relationship('pesananDetails')
-                    ->schema([
-                        Grid::make(4)->schema([
-                        Section::make()
-                            ->schema([
+            Repeater::make('pesananDetails')
+                ->relationship('pesananDetails')
+                ->schema([
+                    Section::make(),
+                        Grid::make([
+                            'default' => 1, // Ponsel
+                            'md' => 3,      // Tablet (dan ponsel landscape yang lebih lebar)
+                            'lg' => 6,
+                            ])
+                        ->schema([
                                 TextInput::make('no_faktur')
                                     ->hidden()
                                     ->dehydrated(),
                                 Select::make('kode_bjadi')
                                     ->label('Nama Produk')
-                                    ->columnSpan(3)
+                                    ->columnSpan([
+                                        'default' => 1, // Ponsel
+                                        'md' => 3,      // Tablet (dan ponsel landscape yang lebih lebar)
+                                        'lg' => 3,
+                                    ])
                                     ->options(Produk::orderBy('nama_bjadi')->pluck('nama_bjadi', 'kode_bjadi'))
                                     ->searchable()
                                     ->live()
@@ -298,14 +308,13 @@ class PesananResource extends Resource
                                                 // $set('../../pesananDetails', $detailsWithoutPair);
                                                 // Untuk sekarang, kita hanya fokus pada penambahan. Penghapusan bisa jadi fitur lanjutan.
                                             }
-                                        }),
-                            ])
-                            ->columns(6),
-                    ])
+                                        })
+
+                        ])
+
                 ])
                 ->createItemButtonLabel('Tambah Item')
                 ->minItems(1)
-                ->columns(4)
                 ->reorderable(false)
                 ->cloneable(false)
                 ->columnSpanFull()
@@ -314,6 +323,7 @@ class PesananResource extends Resource
                 ->deleteAction(
                     fn (Action $action) => $action->requiresConfirmation()
                 )
+                // ->columns(2),
             ]);
     }
 
