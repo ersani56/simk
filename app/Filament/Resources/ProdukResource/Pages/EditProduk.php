@@ -1,14 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\BahanjadiResource\Pages;
+namespace App\Filament\Resources\ProdukResource\Pages;
 
 use App\Filament\Resources\BahanjadiResource;
+use App\Filament\Resources\ProdukResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 
-class EditBahanjadi extends EditRecord
+class EditProduk extends EditRecord
 {
-    protected static string $resource = BahanjadiResource::class;
+    protected static string $resource = ProdukResource::class;
 
     protected function getHeaderActions(): array
     {

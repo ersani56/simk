@@ -17,7 +17,7 @@
     <tbody>
         @foreach($details as $item)
         <tr>
-            <td>{{ $item->bahanjadi->nama_bjadi ?? '-' }}</td>
+            <td>{{ $item->produk->nama_bjadi ?? '-' }}</td>
             <td>{{ $item->jumlah }}</td>
             <td>@currency($item->harga)</td>
             <td>@currency($item->jumlah * $item->harga)</td>
@@ -40,7 +40,7 @@
     <tbody>
         @foreach($riwayatPembayaran as $pembayaran)
         <tr>
-            <td>{{ $pembayaran->no_faktur }}</td>
+            <td>{{ $pembayaran->pesanan->no_faktur }}</td>
             <td>{{ $pembayaran->tanggal_bayar }}</td>
             <td>@currency($pembayaran->jumlah_bayar)</td>
         </tr>

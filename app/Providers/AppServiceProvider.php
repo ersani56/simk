@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Livewire\Livewire;
+use App\Models\PesananDetail;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use App\Observers\PesananDetailObserver;

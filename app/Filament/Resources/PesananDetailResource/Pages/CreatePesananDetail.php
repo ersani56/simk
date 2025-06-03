@@ -13,23 +13,5 @@ class CreatePesananDetail extends CreateRecord
     {
         return $this->getResource()::getUrl('index');
     }
-
-    protected function afterCreate(): void
-{
-    $data = $this->record;
-
-    if ($data->satuan === 'stel' && $data->setelan) {
-        PesananDetail::create([
-            'no_faktur'   => $data->no_faktur,
-            'kode_bjadi'  => $data->setelan, // kode produk pasangan
-            'ukuran'      => $data->ukuran,
-            'jumlah'      => $data->jumlah,
-            'harga'       => 0,
-            'satuan'      => $data->satuan,
-            'setelan'     => $data->kode_bjadi, // produk utama
-            'is_pasangan' => true,
-        ]);
-    }
-}
 }
 

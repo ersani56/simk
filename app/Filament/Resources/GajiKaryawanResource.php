@@ -12,6 +12,7 @@ use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Builder;
 use App\Filament\Resources\GajiKaryawanResource\Pages;
 
+
 class GajiKaryawanResource extends Resource
 {
     protected static ?string $model = GajiKaryawan::class;

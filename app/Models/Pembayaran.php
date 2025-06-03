@@ -9,13 +9,14 @@ class Pembayaran extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'no_faktur',
+        'pesanan_id',
         'tanggal_bayar',
         'jumlah_bayar',
     ];
 
     public function pesanan()
     {
-        return $this->belongsTo(Pesanan::class, 'no_faktur', 'no_faktur');
+        return $this->belongsTo(Pesanan::class);
+        //return $this->belongsTo(Pesanan::class, 'pesanan_id', 'id');
     }
 }

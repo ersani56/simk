@@ -11,7 +11,7 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB; // Tambahkan ini
+use Illuminate\Support\Facades\DB; // Pastikan ini ada
 use App\Filament\Resources\NotaTagihanResource\Pages;
 
 class NotaTagihanResource extends Resource
@@ -30,24 +30,32 @@ class NotaTagihanResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['pesananDetails', 'pembayaran', 'pelanggan'])
-            ->select([
-                'pesanans.*',
-                DB::raw('(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayarans WHERE pembayarans.no_faktur = pesanans.no_faktur) as total_bayar'),
-                DB::raw('(pesanans.total_tagihan - (SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayarans WHERE pembayarans.no_faktur = pesanans.no_faktur)) as sisa_tagihan')
-            ]);
+            ->with(['pesananDetails', 'pembayarans', 'pelanggan']) // Eager loading ini bagus
+            ->select('pesanans.*') // Memilih semua kolom dari pesanans
+            // PERBAIKAN UNTUK total_bayar
+            ->selectRaw('(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayarans WHERE pembayarans.pesanan_id = pesanans.id) as total_bayar')
+            // PERBAIKAN UNTUK sisa_tagihan
+            // Pastikan 'pesanans.total_tagihan' adalah kolom yang valid di tabel 'pesanans'
+            ->selectRaw('(COALESCE(pesanans.total_tagihan, 0) - (SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayarans WHERE pembayarans.pesanan_id = pesanans.id)) as sisa_tagihan');
+            // Tambahkan COALESCE juga untuk pesanans.total_tagihan untuk menghindari error jika NULL
     }
 
     public static function form(Form $form): Form
     {
+        // Form ini sepertinya untuk view, bukan create/edit resource ini secara langsung
+        // Jika resource ini hanya untuk menampilkan, form ini mungkin tidak terlalu krusial
+        // kecuali untuk halaman view.
         return $form->schema([
             Forms\Components\TextInput::make('no_faktur')->disabled(),
-            Forms\Components\TextInput::make('tanggal')->disabled(),
-            Forms\Components\TextInput::make('nama_pelanggan')
+            Forms\Components\TextInput::make('tanggal')->disabled()->date(), // Tambahkan ->date() jika ini tanggal
+            Forms\Components\TextInput::make('pelanggan.nama_plg') // Akses melalui relasi
                 ->label('Nama Pelanggan')
-                ->placeholder(fn ($record) => $record?->pelanggan?->nama_plg)
                 ->disabled(),
-            Forms\Components\Hidden::make('total_tagihan'),
+            // Jika total_tagihan adalah kolom di tabel pesanans:
+            Forms\Components\TextInput::make('total_tagihan')->money('IDR')->disabled(),
+            // Jika total_bayar dan sisa_tagihan dari selectRaw ingin ditampilkan di form View:
+            Forms\Components\TextInput::make('total_bayar')->money('IDR')->disabled(),
+            Forms\Components\TextInput::make('sisa_tagihan')->money('IDR')->disabled(),
         ]);
     }
 
@@ -60,27 +68,32 @@ class NotaTagihanResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('tanggal')
                     ->date()
-                    ->label('Tanggal'),
-                Tables\Columns\TextColumn::make('pelanggan.nama_plg')
+                    ->label('Tanggal')
+                    ->sortable(), // Tanggal biasanya bisa di-sort
+                Tables\Columns\TextColumn::make('pelanggan.nama_plg') // Akses melalui relasi
                     ->label('Pelanggan')
                     ->sortable()
                     ->searchable(),
-                Tables\Columns\TextColumn::make('total_tagihan')
+                Tables\Columns\TextColumn::make('total_tagihan') // Ini adalah kolom asli dari tabel pesanans
                     ->money('IDR')
+                    ->sortable() // Bisa di-sort jika kolom asli
                     ->summarize([
                         Tables\Columns\Summarizers\Sum::make()
                             ->money('IDR')
                             ->label('Total Tagihan')
                     ]),
-                Tables\Columns\TextColumn::make('total_bayar')
+                Tables\Columns\TextColumn::make('total_bayar') // Ini adalah alias dari selectRaw
                     ->money('IDR')
+                    ->sortable() // Bisa di-sort karena sudah dihitung di query utama
                     ->summarize([
                         Tables\Columns\Summarizers\Sum::make()
                             ->money('IDR')
                             ->label('Total Dibayar')
                     ]),
-                Tables\Columns\TextColumn::make('sisa_tagihan')
+                Tables\Columns\TextColumn::make('sisa_tagihan') // Ini adalah alias dari selectRaw
                     ->money('IDR')
+                    ->sortable() // Bisa di-sort karena sudah dihitung di query utama
+                    ->color(fn ($state) => $state > 0 ? 'warning' : 'success') // Contoh pewarnaan
                     ->summarize([
                         Tables\Columns\Summarizers\Sum::make()
                             ->money('IDR')
@@ -89,7 +102,7 @@ class NotaTagihanResource extends Resource
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('kode_plg')
-                    ->options(Pelanggan::all()->pluck('nama_plg', 'kode_plg'))
+                    ->relationship('pelanggan', 'nama_plg') // Lebih baik gunakan relationship di sini
                     ->label('Filter by Pelanggan')
                     ->searchable()
                     ->preload(),
@@ -100,8 +113,10 @@ class NotaTagihanResource extends Resource
                     ->icon('heroicon-o-printer')
                     ->color('primary')
                     ->url(function () {
-                        return route('cetak.tagihan', request()->query());
+                        // Pastikan route 'cetak.tagihan' bisa menangani filter dari query string
+                        return route('cetak.tagihan', request()->query('tableFilters'));
                     }, shouldOpenInNewTab: true)
+                    // ->visible(fn (): bool => request()->has('tableFilters.kode_plg.value') && !empty(request()->query('tableFilters.kode_plg.value'))) // Contoh: hanya muncul jika ada filter pelanggan
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -122,7 +137,7 @@ class NotaTagihanResource extends Resource
     {
         return [
             'index' => Pages\ListNotaTagihans::route('/'),
-            'view' => Pages\ViewNotaTagihan::route('/{record}'),
+            'view' => Pages\ViewNotaTagihan::route('/{record}'), // Pastikan record adalah ID atau slug Pesanan
         ];
     }
 }

@@ -126,7 +126,7 @@
             $totalQty = 0;
             $grouped = $pesanan->pesananDetails
                 ->filter(fn($detail) => $detail->setelan === null || $detail->satuan === 'stel')
-                ->groupBy(fn($d) => $d->bahanjadi->nama_bjadi ?? '-');
+                ->groupBy(fn($d) => $d->produk->nama_bjadi ?? '-');
         @endphp
 
         @foreach($grouped as $namaBarang => $items)
@@ -174,7 +174,7 @@
 
     <div class="clearfix"></div>
 
-    @if($pesanan->pembayaran->count())
+    @if($pesanan->pembayarans->count())
         <div class="catatan">
             <b>Riwayat Pembayaran:</b>
             <table>
@@ -185,7 +185,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($pesanan->pembayaran as $p)
+                    @foreach($pesanan->pembayarans as $p)
                         <tr>
                             <td>{{ $p->tanggal_bayar ?  \Carbon\Carbon::parse($p->tanggal_bayar)->format('d-m-Y') : '-' }}</td>
                             <td>Rp. {{ number_format($p->jumlah_bayar, 0, ',', '.') }}</td>

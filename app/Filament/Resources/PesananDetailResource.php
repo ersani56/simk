@@ -27,7 +27,7 @@ class PesananDetailResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with('bahanjadi');
+        $query = parent::getEloquentQuery()->with('produk');
 
         // Jika bukan admin, sembunyikan yang statusnya selesai
         if (!auth()->user()->hasRole('admin')) {
@@ -48,17 +48,17 @@ class PesananDetailResource extends Resource
             //->query(PesananDetail::with('gajiKaryawans'))
             ->defaultSort('created_at', 'desc')
             ->columns([
-                Tables\Columns\TextColumn::make('no_faktur')
+                Tables\Columns\TextColumn::make('pesanan_id')
                 ->searchable()
                 ->label('No. Faktur')
                 ->sortable(),
-                Tables\Columns\TextColumn::make('bahanjadi.nama_bjadi')->label('Nama Produk')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('produk.nama_bjadi')->label('Nama Produk')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('satuan'),
-                Tables\Columns\TextColumn::make('bahanjadi.gambar1')
+                Tables\Columns\TextColumn::make('produk.gambar1')
                     ->label('Gbr 1')
                     ->formatStateUsing(fn($state) => $state ? '<a href="'.asset("storage/$state").'" target="_blank"><img src="'.asset("storage/$state").'" width="50" style="border-radius:50%;cursor:zoom-in;"></a>' : '-')
                     ->html(),
-                Tables\Columns\TextColumn::make('bahanjadi.gambar2')
+                Tables\Columns\TextColumn::make('produk.gambar2')
                     ->label('Gbr 2')
                     ->formatStateUsing(fn($state) => $state ? '<a href="'.asset("storage/$state").'" target="_blank"><img src="'.asset("storage/$state").'" width="50" style="border-radius:50%;cursor:zoom-in;"></a>' : '-')
                     ->html(),

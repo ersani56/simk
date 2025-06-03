@@ -4,7 +4,7 @@ namespace App\Filament\Resources;
 
 use Filament\Tables;
 use Filament\Forms\Form;
-use App\Models\Bahanjadi;
+use App\Models\Produk;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Card;
@@ -14,11 +14,11 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Forms\Components\FileUpload;
-use App\Filament\Resources\BahanjadiResource\Pages;
+use App\Filament\Resources\ProdukResource\Pages;
 
-class BahanjadiResource extends Resource
+class ProdukResource extends Resource
 {
-    protected static ?string $model = Bahanjadi::class;
+    protected static ?string $model = Produk::class;
     protected static ?string $navigationGroup= 'Admin';
     protected static ?string $navigationLabel = 'Produk';
     protected static ?string $navigation= 'Produk';
@@ -54,7 +54,7 @@ class BahanjadiResource extends Resource
                     ])
                     ->label('Kategori')
                     ->reactive() // Memicu perubahan saat dipilih
-                    ->afterStateUpdated(fn ($state, callable $set) => $set('kode_bjadi', Bahanjadi::generateKodeP($state)))
+                    ->afterStateUpdated(fn ($state, callable $set) => $set('kode_bjadi', Produk::generateKodeP($state)))
                     ->required(),
                     TextInput::make('harga')
                     ->label('Harga')
@@ -142,7 +142,7 @@ class BahanjadiResource extends Resource
                 Action::make('addToCart')
                 ->label('')
                 ->icon('heroicon-o-shopping-cart')
-                ->action(fn (Bahanjadi $record) => self::addToCart($record))
+                ->action(fn (Produk $record) => self::addToCart($record))
                 ->color('success')
                 ->tooltip('Tambah ke keranjang'),
 
@@ -164,9 +164,9 @@ class BahanjadiResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListBahanjadis::route('/'),
-            'create' => Pages\CreateBahanjadi::route('/create'),
-            'edit' => Pages\EditBahanjadi::route('/{record}/edit'),
+            'index' => Pages\ListProduks::route('/'),
+            'create' => Pages\CreateProduk::route('/create'),
+            'edit' => Pages\EditProduk::route('/{record}/edit'),
         ];
     }
 }

@@ -34,7 +34,7 @@ Route::get('/phpinfo', function () {
     });
 Route::get('/nota-tagihan/cetak', function (Request $request) {
     $noFaktur = $request->query('no_faktur');
-    $pesanan = Pesanan::with(['pelanggan', 'pesananDetails.bahanjadi', 'pembayaran'])
+    $pesanan = Pesanan::with(['pelanggan', 'pesananDetails.produk', 'pembayarans'])
         ->where('no_faktur', $noFaktur)
         ->firstOrFail();
 

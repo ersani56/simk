@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Bahanjadi extends Model
+class Produk extends Model
 {
     use HasFactory;
     protected $fillable = ['kode_bjadi','nama_bjadi','kategori','harga','upah_potong','upah_jahit','upah','gambar1','gambar2'];
@@ -31,9 +31,9 @@ class Bahanjadi extends Model
     {
         parent::boot();
 
-        static::creating(function ($bahanjadi) {
-            if (!$bahanjadi->kode_bajdi) {
-                $bahanjadi->kode_bjadi = self::generateKodeP($bahanjadi->kategori);
+        static::creating(function ($produk) {
+            if (!$produk->kode_bajdi) {
+                $produk->kode_bjadi = self::generateKodeP($produk->kategori);
             }
         });
     }

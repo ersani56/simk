@@ -38,7 +38,7 @@ class NotaTagihanPrintController extends Controller
     public function cetakPDF($noFaktur)
     {
         $pesanan = Pesanan::with(['pelanggan', 'pesananDetails.bahanjadi', 'pembayaran'])
-            ->where('no_faktur', $noFaktur)
+            ->where('pesanan_id', $noFaktur)
             ->firstOrFail();
 
         $total = $pesanan->pesananDetails->sum(fn ($item) => $item->jumlah * $item->harga);
