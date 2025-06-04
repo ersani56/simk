@@ -100,20 +100,7 @@ class PesananDetailResource extends Resource
                 Tables\Columns\TextColumn::make('ket')->label('Keterangan')->wrap(),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                ->label('Status Produksi')
-                ->options([
-                    '' => 'Semua',
-                    'antrian' => 'Antrian',
-                    'proses' => 'Proses',
-                    'selesai' => 'Selesai',
-                ])
-                ->default('')
-                ->query(function (Builder $query, array $data) {
-                    if (!empty($data['value'])) {
-                        $query->where('status', $data['value']);
-                    }
-                }),
+
                 Tables\Filters\TernaryFilter::make('hide_completed')
                     ->label('Sembunyikan Selesai')
                     ->placeholder('Tampilkan Semua')
@@ -124,7 +111,7 @@ class PesananDetailResource extends Resource
                         false: fn (Builder $query) => $query->where('status', 'selesai'),
                     )
                     ->visible(fn() => auth()->user()->hasRole('admin'))
-            ])
+                    ])
             ->actions([
         Tables\Actions\Action::make('update_status')
             ->label('')
