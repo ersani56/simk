@@ -125,7 +125,7 @@
             $total = 0;
             $totalQty = 0;
             $grouped = $pesanan->pesananDetails
-                ->filter(fn($detail) => $detail->setelan === null || $detail->satuan === 'stel')
+                ->filter(fn($detail) => $detail->satuan === 'pcs' || $detail->satuan === 'stel'|| $detail->is_pasangan === 0)
                 ->groupBy(fn($d) => $d->produk->nama_bjadi ?? '-');
         @endphp
 

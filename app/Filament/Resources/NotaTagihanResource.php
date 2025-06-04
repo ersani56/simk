@@ -46,7 +46,7 @@ class NotaTagihanResource extends Resource
         // Jika resource ini hanya untuk menampilkan, form ini mungkin tidak terlalu krusial
         // kecuali untuk halaman view.
         return $form->schema([
-            Forms\Components\TextInput::make('no_faktur')->disabled(),
+            Forms\Components\TextInput::make('pesanan_id')->disabled(),
             Forms\Components\TextInput::make('tanggal')->disabled()->date(), // Tambahkan ->date() jika ini tanggal
             Forms\Components\TextInput::make('pelanggan.nama_plg') // Akses melalui relasi
                 ->label('Nama Pelanggan')
