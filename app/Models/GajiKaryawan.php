@@ -31,5 +31,31 @@ class GajiKaryawan extends Model
     }
 
 
+    protected $casts = [
+        'gaji_pokok' => 'decimal:2',
+        'tunjangan_lain' => 'decimal:2',
+        'potongan_kasbon' => 'decimal:2',
+        'potongan_lain' => 'decimal:2',
+        'tanggal_pembayaran' => 'date',
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    // Kasbon yang dipotong pada gaji ini
+    public function kasbonsDipotong()
+    {
+        return $this->hasMany(Kasbon::class, 'gaji_id');
+    }
+
+    // Accessor untuk Gaji Bersih jika tidak menggunakan storedAs
+    public function getGajiBersihAttribute()
+    {
+        return ($this->gaji_pokok + $this->tunjangan_lain) - ($this->potongan_kasbon + $this->potongan_lain);
+    }
+
+
 }
 

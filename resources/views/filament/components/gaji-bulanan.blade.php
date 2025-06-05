@@ -13,11 +13,29 @@
     </style>
 </head>
 <body>
-    <h2>Slip Gaji Bulanan</h2>
-    <p><strong>Bulan:</strong> {{ $tanggal->translatedFormat('F Y') }}</p>
-
+    @php
+    $kasbon = App\Models\Kasbon::whereIn('user_id', $gajiBulanan->pluck('karyawan_id'))->get()->groupBy('user_id');
+    @endphp
+    <div style="margin-bottom: 5px" >
+        <h2>Slip Gaji Bulanan</h2>
+        <hr>
+    </div>
+    <div style="margin-bottom: 5px" >
+        <strong>Bulan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong> {{ $tanggal->translatedFormat('F Y') }}
+    </div>
     @foreach($gajiBulanan->groupBy('karyawan_id') as $karyawanId => $data)
-        <h3>Nama Karyawan: {{ $data->first()->karyawan->name }}</h3>
+        <div style="margin-bottom: 5px;">
+            <strong>Nama Karyawan :</strong> {{ $data->first()->karyawan->name }}
+            <hr>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; border: none;">
+            <tr>
+                <td style="width: 33.33%; border: none;"><strong>Total Gaji:</strong> Rp {{ number_format($data->sum('total'), 0, ',', '.') }}</td>
+                <td style="width: 33.33%; border: none;"><strong>Kasbon:</strong> Rp {{ number_format($kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
+                <td style="width: 33.33%; border: none;"><strong>Gaji Bersih:</strong> Rp {{ number_format($data->sum('total') - $kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
+            </tr>
+        </table>
+        <hr style="margin-bottom: 5px;">
         <table>
             <thead>
                 <tr>
@@ -33,7 +51,7 @@
                 @foreach($data as $gaji)
                     <tr>
                         <td>{{ $gaji->peran }}</td>
-                        <td>{{ $gaji->pesananDetail?->bahanjadi?->nama_bjadi ?? '-' }}</td>
+                        <td>{{ $gaji->pesananDetail?->produk?->nama_bjadi ?? '-' }}</td>
                         <td>{{ $gaji->pesananDetail->ukuran ?? '-' }}</td>
                         <td>{{ $gaji->jumlah }}</td>
                         <td>Rp {{ number_format($gaji->upah, 0, ',', '.') }}</td>
@@ -42,8 +60,7 @@
                 @endforeach
             </tbody>
         </table>
-        <p class="summary"><strong>Total Gaji:</strong> Rp {{ number_format($data->sum('total'), 0, ',', '.') }}</p>
-        <hr>
+
     @endforeach
 </body>
 </html>

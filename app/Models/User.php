@@ -67,4 +67,14 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(\App\Models\Pesanan::class, 'id'); // ganti 'user_id' kalau kamu pakai nama lain
     }
 
+    public function kasbons()
+    {
+        return $this->hasMany(Kasbon::class);
+    }
+
+    public function gajiKaryawans()
+    {
+        return $this->hasMany(GajiKaryawan::class);
+    }
+
 }
