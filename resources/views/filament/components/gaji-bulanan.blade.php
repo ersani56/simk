@@ -22,17 +22,15 @@
         <h2>Slip Gaji Bulanan</h2>
     </div>
     <div style="margin-bottom: 5px" >
-        <strong>Bulan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong> {{ $tanggal->translatedFormat('F Y') }}
-    </div>
-    <div style="margin-bottom: 5px" >
-        <strong>Nama Karyawan :</strong> {{ $data->first()->karyawan->name }}
+        <strong>Bulan&nbsp;&nbsp;&nbsp;&nbsp;:</strong> {{ $tanggal->translatedFormat('F Y') }}
         <hr>
     </div>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; border: none;">
             <tr>
-                <td style="width: 33.33%; border: none;"><strong>Total Gaji:</strong> Rp {{ number_format($data->sum('total'), 0, ',', '.') }}</td>
-                <td style="width: 33.33%; border: none;"><strong>Kasbon:</strong> Rp {{ number_format($kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
-                <td style="width: 33.33%; border: none;"><strong>Gaji Bersih:</strong> Rp {{ number_format($data->sum('total') - $kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
+                <td style="width: 25%; border: none;"><strong>Nama :</strong> {{ $data->first()->karyawan->name }}</td>
+                <td style="width: 25%; border: none;"><strong>Total Gaji :</strong> Rp {{ number_format($data->sum('total'), 0, ',', '.') }}</td>
+                <td style="width: 25%;  border: none;"><strong>Kasbon :</strong> Rp {{ number_format($kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
+                <td style="width: 25%;  border: none;"><strong>Gaji Bersih :</strong> Rp {{ number_format($data->sum('total') - $kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
             </tr>
         </table>
         <table>
