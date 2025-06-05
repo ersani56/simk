@@ -16,18 +16,18 @@
     @php
     $kasbon = App\Models\Kasbon::whereIn('user_id', $gajiBulanan->pluck('karyawan_id'))->get()->groupBy('user_id');
     @endphp
-    <div style="margin-bottom: 5px" >
+    @foreach($gajiBulanan->groupBy('karyawan_id') as $karyawanId => $data)
+        @php $index = $loop->index @endphp
+    <div style="{{ $index > 0 ? 'page-break-before: always;' : '' }} margin-bottom: 5px;">
         <h2>Slip Gaji Bulanan</h2>
-        <hr>
     </div>
     <div style="margin-bottom: 5px" >
         <strong>Bulan&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong> {{ $tanggal->translatedFormat('F Y') }}
     </div>
-    @foreach($gajiBulanan->groupBy('karyawan_id') as $karyawanId => $data)
-        <div style="margin-bottom: 5px;">
-            <strong>Nama Karyawan :</strong> {{ $data->first()->karyawan->name }}
-            <hr>
-        </div>
+    <div style="margin-bottom: 5px" >
+        <strong>Nama Karyawan :</strong> {{ $data->first()->karyawan->name }}
+        <hr>
+    </div>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 5px; border: none;">
             <tr>
                 <td style="width: 33.33%; border: none;"><strong>Total Gaji:</strong> Rp {{ number_format($data->sum('total'), 0, ',', '.') }}</td>
@@ -35,7 +35,6 @@
                 <td style="width: 33.33%; border: none;"><strong>Gaji Bersih:</strong> Rp {{ number_format($data->sum('total') - $kasbon->get($data->first()->karyawan_id, collect())->sum('jumlah'), 0, ',', '.') }}</td>
             </tr>
         </table>
-        <hr style="margin-bottom: 5px;">
         <table>
             <thead>
                 <tr>
