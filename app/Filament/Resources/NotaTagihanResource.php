@@ -10,9 +10,10 @@ use App\Models\Pelanggan;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\DB; // Pastikan ini ada
 use App\Filament\Resources\NotaTagihanResource\Pages;
+use Illuminate\Support\Facades\DB; // Pastikan ini ada
 
 class NotaTagihanResource extends Resource
 {
@@ -46,22 +47,24 @@ class NotaTagihanResource extends Resource
         // Jika resource ini hanya untuk menampilkan, form ini mungkin tidak terlalu krusial
         // kecuali untuk halaman view.
         return $form->schema([
-            Forms\Components\TextInput::make('pesanan_id')->disabled(),
-            Forms\Components\TextInput::make('tanggal')->disabled()->date(), // Tambahkan ->date() jika ini tanggal
-            Forms\Components\TextInput::make('pelanggan.nama_plg') // Akses melalui relasi
+            TextInput::make('pesanan_id')->disabled(),
+            TextInput::make('tanggal')->disabled(), // Tambahkan ->date() jika ini tanggal
+            TextInput::make('pelanggan.nama_plg') // Akses melalui relasi
                 ->label('Nama Pelanggan')
                 ->disabled(),
             // Jika total_tagihan adalah kolom di tabel pesanans:
-            Forms\Components\TextInput::make('total_tagihan')->money('IDR')->disabled(),
+            TextInput::make('total_tagihan')->disabled(),
             // Jika total_bayar dan sisa_tagihan dari selectRaw ingin ditampilkan di form View:
-            Forms\Components\TextInput::make('total_bayar')->money('IDR')->disabled(),
-            Forms\Components\TextInput::make('sisa_tagihan')->money('IDR')->disabled(),
+            TextInput::make('total_bayar')->disabled(),
+            TextInput::make('sisa_tagihan')->disabled(),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+        ->recordUrl(null)
+        ->striped()
         ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('no_faktur')

@@ -23,7 +23,7 @@ class ViewNotaTagihan extends ViewRecord
     public function getFooter(): ?\Illuminate\Contracts\View\View
     {
         // Load relasi agar semua data tersedia
-        $record = $this->record->load(['pelanggan', 'detail', 'pembayaran']);
+        $record = $this->record->load(['pelanggan', 'detail', 'pembayarans']);
 
         $details = $record->detail;
         $pelanggan = $record->pelanggan;

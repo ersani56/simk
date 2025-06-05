@@ -14,7 +14,7 @@
         <tbody>
             @foreach ($details as $item)
                 <tr>
-                    <td>{{ $item->bahanjadi->nama_bjadi ?? '-' }}</td>
+                    <td>{{ $item->produk->nama_bjadi ?? '-' }}</td>
                     <td>{{ $item->jumlah }}</td>
                     <td>@currency($item->harga)</td>
                     <td>@currency($item->jumlah * $item->harga)</td>
