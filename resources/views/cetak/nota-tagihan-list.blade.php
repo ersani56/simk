@@ -27,7 +27,7 @@
         <tbody>
             @foreach ($pesanans as $p)
                 <tr>
-                    <td>{{ $p->pesanan_id }}</td>
+                    <td>{{ $p->no_faktur}}</td>
                     <td>{{ \Carbon\Carbon::parse($p->tanggal)->format('d M Y') }}</td>
                     <td>{{ $p->pelanggan->nama_plg ?? '-' }}</td>
                     <td>{{ number_format($p->total_tagihan ?? 0, 0, ',', '.') }}</td>

@@ -13,7 +13,7 @@ class NotaTagihanPrintController extends Controller
 {
     public function cetak($id)
     {
-        $pesanan = Pesanan::with(['pelanggan', 'pesananDetails', 'pembayaran'])->findOrFail($id);
+        $pesanan = Pesanan::with(['pelanggan', 'pesananDetails', 'pembayarans'])->findOrFail($id);
 
         $details = $pesanan->pesananDetails;
         $total = $details->sum(fn ($item) => $item->jumlah * $item->harga);
@@ -37,8 +37,8 @@ class NotaTagihanPrintController extends Controller
 
     public function cetakPDF($noFaktur)
     {
-        $pesanan = Pesanan::with(['pelanggan', 'pesananDetails.bahanjadi', 'pembayaran'])
-            ->where('pesanan_id', $noFaktur)
+        $pesanan = Pesanan::with(['pelanggan', 'pesananDetails.produk', 'pembayarans'])
+            ->where('no_faktur', $noFaktur)
             ->firstOrFail();
 
         $total = $pesanan->pesananDetails->sum(fn ($item) => $item->jumlah * $item->harga);
@@ -68,7 +68,7 @@ class NotaTagihanPrintController extends Controller
 
     public function cetakSemua(Request $request)
     {
-        $query = Pesanan::with(['pelanggan', 'pembayaran']);
+        $query = Pesanan::with(['pelanggan', 'pembayarans']);
 
         if ($request->has('tableFilters.kode_plg.value')) {
             $kodePlg = $request->input('tableFilters.kode_plg.value');
