@@ -15,11 +15,18 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Resources\KasbonResource\Pages;
 
+
+
 class KasbonResource extends Resource
 {
     protected static ?string $model = Kasbon::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()->hasRole('admin');
+    }
 
     public static function form(Form $form): Form
     {
