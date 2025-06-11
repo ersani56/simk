@@ -49,7 +49,7 @@ class GajiKaryawanResource extends Resource
                 ->searchable()
                 ->sortable(),
                 Tables\Columns\TextColumn::make('peran')->label('Peran'),
-                Tables\Columns\TextColumn::make('pesananDetail.bahanjadi.nama_bjadi')
+                Tables\Columns\TextColumn::make('pesananDetail.produk.nama_bjadi')
                 ->label('Nama Barang')
                 ->sortable()
                 ->searchable(),
