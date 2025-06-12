@@ -3,7 +3,7 @@
 <head>
     <title>Daftar Tagihan</title>
     <style>
-        body { font-family: sans-serif; font-size: 12px; }
+        body { font-family: sans-serif; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #000; padding: 6px; text-align: left; }
         h3, h4 { margin-bottom: 5px; }
