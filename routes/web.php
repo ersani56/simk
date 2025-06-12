@@ -43,3 +43,6 @@ Route::get('/nota-tagihan/cetak', function (Request $request) {
     return $pdf->stream('NotaTagihan-' . $noFaktur . '.pdf');
 })->name('nota-tagihan.cetak');
 Route::get('/cetak/tagihan', [NotaTagihanPrintController::class, 'cetakSemua'])->name('cetak.tagihan');
+// Route untuk mencetak daftar tagihan yang sudah difilter
+Route::get('/nota-tagihan/cetak-filtered', [NotaTagihanPrintController::class, 'cetakFiltered'])
+    ->name('nota-tagihan.cetak-filtered');

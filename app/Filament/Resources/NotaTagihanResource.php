@@ -112,15 +112,25 @@ class NotaTagihanResource extends Resource
                     ->preload(),
             ])
             ->headerActions([
-                Action::make('Cetak Berdasarkan Filter')
-                    ->label('Cetak Berdasarkan Filter')
+                Action::make('Cetak Hasil Filter')
+                    ->label('Cetak Hasil Filter')
                     ->icon('heroicon-o-printer')
                     ->color('primary')
-                    ->url(function () {
-                        // Pastikan route 'cetak.tagihan' bisa menangani filter dari query string
-                        return route('cetak.tagihan', request()->query('tableFilters'));
-                    }, shouldOpenInNewTab: true)
-                    // ->visible(fn (): bool => request()->has('tableFilters.kode_plg.value') && !empty(request()->query('tableFilters.kode_plg.value'))) // Contoh: hanya muncul jika ada filter pelanggan
+                    ->url(fn ($livewire) =>
+                        $livewire->getFilteredTableQuery()->count()
+                            ? route('nota-tagihan.cetak-filtered', ['ids' => $livewire->getFilteredTableQuery()->pluck('id')->toArray()])
+                            : null
+                    )
+                    ->openUrlInNewTab()
+                    ->after(function ($livewire) {
+                        if ($livewire->getFilteredTableQuery()->count() === 0) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Tidak Ada Data')
+                                ->body('Tidak ada data yang cocok dengan filter untuk dicetak.')
+                                ->warning()
+                                ->send();
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),

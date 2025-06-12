@@ -87,4 +87,41 @@ class NotaTagihanPrintController extends Controller
 
         return $pdf->stream('daftar-tagihan.pdf');
     }
+
+    public function cetakFiltered(Request $request)
+    {
+        // 1. Validasi input, pastikan 'ids' ada dan merupakan array
+        $validated = $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'integer', // Pastikan semua isinya adalah angka
+        ]);
+
+        $pesananIds = $validated['ids'];
+
+        // 2. Ambil data dari database HANYA untuk ID yang dikirim
+        // Sama seperti di resource, kita perlu menghitung total bayar.
+        // Cara paling mudah adalah dengan mengulang query dari resource.
+        $pesanans = Pesanan::whereIn('id', $pesananIds)
+            ->with('pelanggan')
+            ->select('pesanans.*')
+            ->selectRaw('(SELECT COALESCE(SUM(jumlah_bayar), 0) FROM pembayarans WHERE pembayarans.pesanan_id = pesanans.id) as total_bayar')
+            ->get(); // Gunakan get() karena kita sudah punya semua ID
+
+        // 3. Hitung ringkasan total dari koleksi yang sudah didapat
+        $totalTagihan = $pesanans->sum('total_tagihan');
+        $totalBayar = $pesanans->sum('total_bayar');
+        $sisaTagihan = $totalTagihan - $totalBayar;
+
+            // Muat view ke dalam PDF menggunakan compact()
+            // Pastikan semua nama variabel di dalam compact() ada.
+        $pdf = Pdf::loadView('cetak.nota-tagihan-list', compact(
+                'pesanans',
+                'totalTagihan',
+                'totalBayar',
+                'sisaTagihan'
+            ));
+
+            $fileName = 'daftar-tagihan-' . date('Y-m-d') . '.pdf';
+            return $pdf->stream($fileName);
+    }
 }

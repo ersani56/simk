@@ -10,6 +10,7 @@ use Filament\Tables\Table;
 use Illuminate\Support\Str;
 use Filament\Resources\Resource;
 use Filament\Forms\Components\Grid;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
@@ -26,6 +27,7 @@ class PesananResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Transaksi';
+    public ?string $produkTerakhirDipilih = null;
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -94,11 +96,14 @@ class PesananResource extends Resource
                     ->default('-')
                     ->rows(1),
                 ]),
+                Hidden::make('produk_terakhir')
+                ->reactive(),
             //->columns(4),
 
                 // **Detail Pesanan**
             Repeater::make('pesananDetails')
                 ->relationship('pesananDetails')
+                ->reactive()
                 ->schema([
                    // Section::make(),
                         Grid::make([
@@ -107,6 +112,7 @@ class PesananResource extends Resource
                             'lg' => 6,
                         ])
                         ->schema([
+                                Hidden::make('produk_terakhir'), // hanya untuk menyimpan sementara pilihan terakhir
                                 TextInput::make('no_faktur')
                                     ->hidden()
                                     ->dehydrated(),
@@ -117,7 +123,36 @@ class PesananResource extends Resource
                                         'md' => 3,      // Tablet (dan ponsel landscape yang lebih lebar)
                                         'lg' => 3,
                                     ])
-                                    ->options(Produk::orderBy('nama_bjadi')->pluck('nama_bjadi', 'kode_bjadi'))
+                                    //->options(Produk::orderBy('nama_bjadi')->pluck('nama_bjadi', 'kode_bjadi'))
+                                    ->reactive()
+                                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                            $produkTerakhir = $get('../../produk_terakhir') ?? [];
+
+                                            // Tambah produk yang baru dipilih
+                                            array_unshift($produkTerakhir, $state);
+
+                                            // Hapus duplikat dan batasi hanya 2 terakhir
+                                            $produkTerakhir = array_unique($produkTerakhir);
+                                            $produkTerakhir = array_slice($produkTerakhir, 0, 2);
+
+                                            $set('../../produk_terakhir', $produkTerakhir);
+                                        })
+                                        ->options(function (callable $get) {
+                                            $produkList = \App\Models\Produk::orderBy('nama_bjadi')->get();
+                                            $produkTerakhir = $get('../../produk_terakhir') ?? [];
+
+                                            // Ambil dua produk terakhir dari koleksi
+                                            $produkTerakhirList = collect($produkTerakhir)
+                                                ->map(fn ($kode) => $produkList->firstWhere('kode_bjadi', $kode))
+                                                ->filter();
+
+                                            // Sisanya yang belum dipakai
+                                            $produkSisa = $produkList->reject(fn ($p) => in_array($p->kode_bjadi, $produkTerakhir));
+
+                                            return $produkTerakhirList
+                                                ->merge($produkSisa)
+                                                ->pluck('nama_bjadi', 'kode_bjadi');
+                                        })
                                     ->searchable()
                                     ->live()
                                     ->required()

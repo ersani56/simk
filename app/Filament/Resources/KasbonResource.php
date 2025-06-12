@@ -15,8 +15,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Enums\ActionsPosition;
 use App\Filament\Resources\KasbonResource\Pages;
 
-
-
 class KasbonResource extends Resource
 {
     protected static ?string $model = Kasbon::class;
