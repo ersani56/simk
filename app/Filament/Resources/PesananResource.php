@@ -187,6 +187,7 @@ class PesananResource extends Resource
                                     ->prefix('Rp.'),
                                 Select::make('ukuran')
                                 ->options([
+                                    'All' => 'All',
                                     'S' => 'S',
                                     'M' => 'M',
                                     'L' => 'L',
@@ -203,7 +204,7 @@ class PesananResource extends Resource
                                     'Jumbo Pdk' => 'Jumbo Pdk',
                                     'S Pjg' => 'S Pjg',
                                     'M Pjg' => 'M Pjg',
-                                    'L Panjang' => 'L Pjg',
+                                    'L Pjg' => 'L Pjg',
                                     'XL Pjg' => 'XL Pjg',
                                     'XXL Pjg' => 'XXL Pjg',
                                     'XXXL Pjg' => 'XXXL Pjg',
