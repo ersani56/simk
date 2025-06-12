@@ -24,7 +24,6 @@ class ViewNotaTagihan extends ViewRecord
     {
         // Load relasi agar semua data tersedia
         $record = $this->record->load(['pelanggan', 'detail', 'pembayarans']);
-
         $details = $record->detail;
         $pelanggan = $record->pelanggan;
         $total = $details->sum(fn ($item) => $item->jumlah * $item->harga);

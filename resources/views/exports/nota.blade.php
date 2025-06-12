@@ -113,11 +113,11 @@
     <table>
         <thead>
             <tr>
-                <th>Nama Barang</th>
-                <th>Size</th>
-                <th>Qty</th>
-                <th>Harga</th>
-                <th>Total</th>
+                <th width="270px" style="text-align: center">Nama Barang</th>
+                <th width="60px" style="text-align: center">Size</th>
+                <th width="60px" style="text-align: center">Qty</th>
+                <th width="60px" style="text-align: center">Harga</th>
+                <th width="60px" style="text-align: center">Total</th>
             </tr>
         </thead>
         <tbody>
@@ -142,8 +142,8 @@
                     @endif
                     <td class="sep">{{ $detail->ukuran }}</td>
                     <td>{{ $detail->jumlah.' '.$detail->satuan }} </td>
-                    <td class="value">Rp. {{ number_format($detail->harga, 0, ',', '.') }}</td>
-                    <td class="value">Rp. {{ number_format($subtotal, 0, ',', '.') }}</td>
+                    <td class="value">{{ number_format($detail->harga, 0, ',', '.') }}</td>
+                    <td class="value">{{ number_format($subtotal, 0, ',', '.') }}</td>
                 </tr>
             @endforeach
         @endforeach
