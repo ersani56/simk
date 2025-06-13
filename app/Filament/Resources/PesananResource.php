@@ -187,7 +187,6 @@ class PesananResource extends Resource
                                     ->prefix('Rp.'),
                                 Select::make('ukuran')
                                 ->options([
-                                    'All' => 'All',
                                     'S' => 'S',
                                     'M' => 'M',
                                     'L' => 'L',
@@ -223,6 +222,7 @@ class PesananResource extends Resource
                                     'XXL Pr' => 'XXL Pr',
                                     'XXXL Pr' => 'XXXL Pr',
                                     'Jumbo Per' => 'Jumbo Pr',
+                                    '-' => '-',
                                 ])
                                 ->required(),
                                 TextInput::make('jumlah')
@@ -312,38 +312,14 @@ class PesananResource extends Resource
                                                 $set('../../pesananDetails', $allDetails);
 
                                             } elseif ($old === 'stel' && $state !== 'stel') {
-                                                // Jika sebelumnya 'stel' dan sekarang bukan 'stel' lagi,
-                                                // kita perlu menghapus item 'pasangan' yang terkait.
-                                                // Ini memerlukan cara untuk mengidentifikasi pasangan dari item ini.
-                                                // Misalnya, jika Anda menyimpan $pasanganItemKey pada item induk
-                                                // atau jika item pasangan memiliki referensi ke $currentItemKey.
-
                                                 $updatedDetails = [];
                                                 foreach ($allDetails as $key => $detail) {
-                                                    // Asumsi: item pasangan dibuat dengan 'ket' yang merujuk ke 'kode_bjadi' induk
-                                                    // atau Anda memiliki cara lain untuk mengidentifikasi.
-                                                    // Ini adalah bagian yang paling tricky untuk penghapusan otomatis.
-                                                    // Contoh sederhana: jika pasangan selalu item berikutnya dengan is_pasangan=true
-                                                    // Ini tidak robust. Cara terbaik adalah menyimpan ID pasangan di item stel, atau sebaliknya.
-
-                                                    // Logika untuk menentukan apakah item ini adalah pasangan dari item yang diubah
-                                                    // $isPairOfCurrentItem = ... ; (misalnya, berdasarkan $detail['ket'] atau field 'parent_key')
-
-                                                    // Untuk contoh ini, kita asumsikan tidak ada logika penghapusan otomatis yang kompleks
-                                                    // dan hanya memastikan item saat ini diupdate.
                                                     if ($key === $currentItemKey) {
                                                         $detail['is_pasangan'] = null; // Atau false, atau sesuai logika Anda
                                                         // $detail['satuan'] = $state; // Sudah dihandle Filament
                                                     }
                                                     $updatedDetails[$key] = $detail;
                                                 }
-                                                // Logika untuk menghapus item pasangan perlu lebih spesifik
-                                                // Misalnya, jika Anda menambahkan 'parent_key' ke item pasangan:
-                                                // $detailsWithoutPair = array_filter($allDetails, function($itemData, $itemKey) use ($currentItemKey) {
-                                                //     return !($itemData['is_pasangan'] === true && $itemData['parent_key_temp'] === $currentItemKey);
-                                                // }, ARRAY_FILTER_USE_BOTH);
-                                                // $set('../../pesananDetails', $detailsWithoutPair);
-                                                // Untuk sekarang, kita hanya fokus pada penambahan. Penghapusan bisa jadi fitur lanjutan.
                                             }
                                         })
 

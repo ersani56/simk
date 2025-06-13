@@ -32,7 +32,7 @@
         }
 
         .sep {
-            text-align: center;
+            text-align: left;
             width: 10px;
             padding: 0 5px;
         }
