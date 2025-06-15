@@ -15,15 +15,7 @@ class StatsOverview extends BaseWidget
                 ->color('warning')
                 ->description('Pcs'),
 
-            Card::make('Selesai dipotong', fn () => PesananDetail::where('status', 'dipotong')->sum('jumlah'))
-                ->color('info')
-                ->description('Pcs'),
-
-            Card::make('Selesai dijahit', fn () => PesananDetail::where('status', 'dijahit')->sum('jumlah'))
-                ->color('info')
-                ->description('Pcs'),
-
-            Card::make('Selesai disablon', fn () => PesananDetail::where('status', 'disablon')->sum('jumlah'))
+            Card::make('Proses', fn () => PesananDetail::where('status', 'proses')->sum('jumlah'))
                 ->color('info')
                 ->description('Pcs'),
 
