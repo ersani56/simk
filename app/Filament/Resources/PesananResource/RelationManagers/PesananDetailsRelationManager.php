@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources;
+namespace App\Filament\Resources\PesananResource\RelationManagers;
 
 use App\Models\Produk;
 use Filament\Tables\Table;
